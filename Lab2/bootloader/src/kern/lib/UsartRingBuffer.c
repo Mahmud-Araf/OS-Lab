@@ -37,6 +37,8 @@
 #include <cm4.h>
 #include <cmd_def.h>
 
+extern UART_HandleTypeDef huart6;
+
 
 /*  Define the device uart and pc uart below according to your setup  */
 
@@ -211,7 +213,7 @@ int Uart_read(UART_HandleTypeDef *uart)
 		{
 			unsigned char c = uart->pRxBuffPtr->buffer[uart->pRxBuffPtr->tail];
 			uart->pRxBuffPtr->tail = (unsigned int)(uart->pRxBuffPtr->tail + 1) % uart->RxXferSize;
-			return c;
+            return c;
 		}
 	}
 
@@ -489,7 +491,8 @@ Uart_isr(UART_HandleTypeDef *huart)
 		huart->Instance->SR; /* Read status register */
 
 		c = (unsigned char)(huart->Instance->DR); /* Read data register */
-		store_char(c, huart);					  // store data in buffer
+		// Uart_write(c, huart);
+        store_char(c, huart);					  // store data in buffer
 
 		return;
 	}
@@ -565,3 +568,26 @@ void debug_buffer(UART_HandleTypeDef *huart)
 	}
 }
 
+// added by pekka
+void DisableUart(UART_HandleTypeDef *huart)
+{	
+	//disable uart clock
+	if(huart == &huart2)
+		__RCC_USART2_CLK_DISABLE();
+	else if(huart == &huart6)
+		__RCC_USART6_CLK_DISABLE();
+ 
+ 
+	//disable uart
+	__UART_DISABLE(huart);
+ 
+ 
+	//disable all uart interrupts
+	__UART_DISABLE_IT(huart, UART_IT_PE);
+	__UART_DISABLE_IT(huart, UART_IT_RXNE);
+	__UART_DISABLE_IT(huart, UART_IT_TXE);
+	__UART_DISABLE_IT(huart, UART_IT_ERR);
+	__UART_DISABLE_IT(huart, UART_IT_IDLE);
+	__UART_DISABLE_IT(huart, UART_IT_LBD);
+ 
+}

@@ -86,11 +86,6 @@ void kprintf(char *format,...)
 			Uart_sendstring((char*)convert(i,8),__CONSOLE);
 			break;
 		case 'x': i = va_arg(list,int);
-			/*if(i<0)
-			{
-				Uart_write('-',__CONSOLE);
-				i=-i;				
-			}*/
 			Uart_sendstring((char*)convertu32(i,16),__CONSOLE);
 			break;
 		case 'u':	
@@ -135,14 +130,19 @@ void kscanf(char *format,...)
 			switch (*ptr)
 			{
 			case 'c': //charater
-				*(uint8_t*)va_arg(list,uint8_t*)=Uart_read(__CONSOLE);
+                int input = -1;
+                do {
+                    input = Uart_read(__CONSOLE);
+                } while(input == -1);
+
+				*(uint8_t*)va_arg(list,uint8_t*)=input;
 				break;
 			case 'd': //integer number 
 				//uart_USART_READ_STR(USART2,buff,50); 
 				*(uint32_t*)va_arg(list,uint32_t*)=__str_to_num(buff,10);	
 				break;
 			case 's': //string without spaces
-				//_USART_READ_STR(USART2,buff,50); 
+				// _USART_READ_STR(USART2,buff,50);
 				str = va_arg(list,uint8_t*);
 				len = __strlen(buff);
 				for(int u = 0; u<=len; u++)	// copy from buff to user defined char pointer (i.e string)

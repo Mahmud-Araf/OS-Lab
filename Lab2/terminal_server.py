@@ -1,198 +1,86 @@
-import serial
-import zlib
-import time
+import math
 import os
-import argparse
-import json
+import serial
 
-# Command Definitions
-HEADER_BYTE = 0xA5
-CMD_START_TRANSFER = 0x01
-CMD_FIRMWARE_SIZE = 0x02
-CMD_OS_VERSIONS = 0x03
-ACK = 0x06
-NACK = 0x15
-CHUNK_SIZE = 128
-MAX_RETRIES = 25
+CHUNK_SIZE = 500  # 32 bytes data
+FILE_PATH = 'duos24_latest_release/src/compile/target/duos'
+SERIAL_PORT = "/dev/tty.usbmodem1203"
 
-def calculate_crc(chunk):
-    """Calculate CRC-32 for the given chunk."""
-    return zlib.crc32(chunk) & 0xFFFFFFFF  # Mask to get the lower 32-bits
+class TerminalServer:
+    def __init__(self):
+        self.serial_instance = serial.Serial(port=SERIAL_PORT, baudrate=115200)
+        print("Terminal Server Connected to Serial Port:", self.serial_instance.name)
+        with open('version.txt', 'r') as file:
+            self.latest_version = float(file.read())
+            print("Server OS version: ",self.latest_version)
 
-def send_command(ser, command_type, payload=b''):
-    """Send a structured command packet with a header, command type, payload size, and payload."""
-    packet = bytes([HEADER_BYTE, command_type, len(payload)]) + payload
-    checksum = sum(packet) & 0xFF
-    packet += bytes([checksum])
-    ser.write(packet)
-    print(f"Sent command: {packet.hex()}")
+    def run(self):
+        try:
+            while True:
+                value = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
+                print("me - " + value)
+                
+                cmd = value.split()
+                
+                if cmd[0] == "CHECK_VERSION":
+                    self.check_version(cmd)
+                elif cmd[0] == "GET_UPDATE":
+                    self.get_update()
+        except KeyboardInterrupt:
+            print("Keyboard Interrupt detected. Exiting...")
+        finally:
+            self.serial_instance.close()
 
-def read_from_serial(ser):
-    """Read a byte from the serial port and return it, along with its hex representation."""
-    try:
-        byte = ser.read(1)  # Read one byte
-        if byte:
-            # Convert byte to hex representation for logging
-            hex_byte = byte.hex()
-            
-            # Attempt to decode the byte to an ASCII character
-            try:
-                ascii_char = byte.decode('ascii')  # Decode to ASCII
-                print(f"{ascii_char}")
-            except UnicodeDecodeError as e:
-                print(e)
-                #print what is error
-               
-                print(f"{hex_byte}")
-
-            return byte
+    def check_version(self, cmd):
+        current_version = float(cmd[1])
+        if math.isclose(current_version, self.latest_version, rel_tol=1e-9):
+            response = "NO_UPDATES_AVAILABLE\n".encode('utf-8')
         else:
-            # print("No byte received.")
-            return None
-    except serial.SerialException as e:
-        print(f"Serial port error: {e}")
-        return None
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-        return None
+            response = f"UPDATE_AVAILABLE {self.latest_version}\n".encode('utf-8')
+        self.serial_instance.write(response)
 
-def send_file(file_name, serial_port):
-    if not os.path.isfile(file_name):
-        print(f"Error: File '{file_name}' not found.")
-        return
-
-    try:
-        with open(file_name, 'rb') as f:
-            data = f.read()
-    except IOError as e:
-        print(f"Error reading file '{file_name}': {e}")
-        return
-
-    try:
-        with serial.Serial(serial_port, 115200, timeout=1) as ser:
-            # Send Start Transfer command
-            send_command(ser, CMD_START_TRANSFER)
-            #time.sleep(1)  # Short delay to ensure the command is received
-            ack = read_from_serial(ser)
-            while 1:
-                print(ack)
-                if ack == bytes([ACK]):
-                    print("ACK received for start transfer command.")
-                    break
+    def get_update(self):
+        file_size = os.path.getsize(FILE_PATH)
+        print(f"File size: {file_size} Bytes")
+        packet = str(file_size).encode('utf-8') + b'$'
+        
+        self.serial_instance.write(packet)
+        ack = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
+        print(ack)
+        
+        if ack == "ACK":
+            print("File size sent successfully")
             
+            with open(FILE_PATH, 'rb') as file:
+                current_chunk_number = 1
+                total_chunk_number = int(math.ceil(file_size / CHUNK_SIZE))
+                
+                while file_size:
+                    chunk = file.read(CHUNK_SIZE)
+                    packet = chunk
+                    
+                    self.serial_instance.write(packet)
+                    ack = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
+                    print(ack)
+                    
+                    if ack != "NACK":
+                        print(f"{current_chunk_number} / {total_chunk_number} chunks are sent successfully")
+                        current_chunk_number += 1
+                        
+                        if file_size >= CHUNK_SIZE:
+                            file_size -= CHUNK_SIZE
+                        else:
+                            file_size = 0
+                    elif ack == "NACK":
+                        print(f"Error while sending chunk number {current_chunk_number}")
+                        break
             
+            if file_size == 0:
+                print("File sent successfully")
+                    
+        elif ack == "NACK":
+            print("Error while sending file size")
 
-            # Send firmware size as a command
-            file_size = len(data)
-            send_command(ser, CMD_FIRMWARE_SIZE, file_size.to_bytes(4, 'little'))
-            print(f"Sent file size: {file_size} bytes")
-            ack = read_from_serial(ser)
-
-            # Wait for ACK for file size
-            retries = 0
-            while retries < MAX_RETRIES:
-                ack = read_from_serial(ser)
-                if ack == bytes([ACK]):
-                    print("ACK received for file size.")
-                    break
-                else:
-                    # print("")
-                    retries += 1
-                    time.sleep(0.5)  # Short delay before retrying
-            if retries == MAX_RETRIES:
-                print("Failed to receive ACK for file size. Aborting transfer.")
-                return
-
-            offset = 0
-            total_size = len(data)
-            retries = 0
-
-            print(f"Starting file transfer of '{file_name}', size: {total_size} bytes")
-
-            while offset < total_size:
-                chunk = data[offset:offset + CHUNK_SIZE]
-                chunk_size = len(chunk)
-                crc = calculate_crc(chunk)
-
-                # Prepare payload with CRC, chunk size, and chunk data
-                payload = crc.to_bytes(4, 'big') + chunk_size.to_bytes(1, 'big') + chunk
-
-                # Send structured command packet for chunk transfer
-                send_command(ser, CMD_START_TRANSFER, payload)
-
-                # Wait for ACK/NACK response
-                ack = read_from_serial(ser)
-                if ack == bytes([ACK]):
-                    offset += chunk_size
-                    retries = 0  # Reset retries on successful transmission
-                    print(f"Chunk {offset // CHUNK_SIZE} acknowledged.")
-                elif ack == bytes([NACK]):
-                    print(f"Chunk {offset // CHUNK_SIZE} not acknowledged. Retrying...")
-                    retries += 1
-                    if retries > MAX_RETRIES:
-                        print("Max retries exceeded. Transfer aborted.")
-                        return
-                    time.sleep(0.5)  # Short delay before resending
-                else:
-                    print("No response or unexpected response received. Retrying...")
-                    retries += 1
-                    if retries > MAX_RETRIES:
-                        print("Max retries exceeded. Transfer aborted.")
-                        return
-                    time.sleep(0.5)  # Short delay before resending
-
-            print("File transfer completed successfully.")
-    except serial.SerialException as e:
-        print(f"Serial port error: {e}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-
-def send_os_versions(serial_port):
-    """Send the OS versions as an array over the serial port."""
-    try:
-        with open('os_versions.json', 'r') as f:
-            os_versions = json.load(f)
-        versions = [entry['version'] for entry in os_versions]
-        versions_str = json.dumps(versions)
-        with serial.Serial(serial_port, 115200, timeout=1) as ser:
-            send_command(ser, CMD_OS_VERSIONS, versions_str.encode('utf-8'))
-            print(f"Sent OS versions: {versions_str}")
-    except Exception as e:
-        print(f"Error sending OS versions: {e}")
-
-def receive_version_and_send_file(serial_port):
-    """Receive the version from the serial port and send the corresponding OS file."""
-    try:
-        with open('os_versions.json', 'r') as f:
-            os_versions = json.load(f)
-        with serial.Serial(serial_port, 115200, timeout=1) as ser:
-            version = read_from_serial(ser).decode('utf-8')
-            print(f"Received version: {version}")
-            for entry in os_versions:
-                if entry['version'] == version:
-                    send_file(entry['path'], serial_port)
-                    return
-            print(f"Version '{version}' not found.")
-    except Exception as e:
-        print(f"Error receiving version and sending file: {e}")
-
-def main():
-    parser = argparse.ArgumentParser(description='File transfer over serial.')
-    parser.add_argument('port', type=str, help='The serial port to use')
-    args = parser.parse_args()
-
-    with serial.Serial(args.port, 115200, timeout=1) as ser:
-        while True:
-            user_input = read_from_serial(ser).decode('utf-8')
-            if user_input == '1':
-                send_os_versions(args.port)
-            elif user_input == '2':
-                receive_version_and_send_file(args.port)
-            elif user_input == '3':
-                print("Exiting program.")
-                break
-            else:
-                print("Invalid input received. Please send '1' to send version info, '2' to send os file, or '3' to stop.")
-
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    updater = TerminalServer()
+    updater.run()

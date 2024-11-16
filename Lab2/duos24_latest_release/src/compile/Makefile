@@ -85,7 +85,7 @@ debug.o \
 sys_spi.o \
 sys_err.o \
 sys_rtc.o \
-bootloader \
+duos \
 final.elf
 
 
@@ -171,7 +171,7 @@ sys_rtc.o: $(OS_SYS_LIB)/sys_rtc.c
 test_can.o: $(USERLAND)/utils/test_can.c
 	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OBJECT)/$@
 
-bootloader: $(OBJECT)/kmath.o \
+duos: $(OBJECT)/kmath.o \
 	$(OBJECT)/kfloat.o  \
 	$(OBJECT)/cm4.o \
 	$(OBJECT)/mcu_info.o \
@@ -221,10 +221,6 @@ final.elf: $(OBJECT)/kmath.o \
 	
 	
 	$(CC) $(LDFLAGS) $^ -o build/$@
-
-	@echo "Running Python script..."
-	python3 padder.py
-	@echo "Done."
 	
 # $(OBJECT)/m5stack.o 
 # $(OBJECT)/m5stack_error.o 
@@ -236,5 +232,5 @@ clean_flash:
 	openocd -f /opt/homebrew/Cellar/open-ocd/0.12.0_1/share/openocd/scripts/board/stm32f4discovery.cfg -f /opt/homebrew/Cellar/open-ocd/0.12.0_1/share/openocd/scripts/interface/stlink.cfg -c "init; reset halt; flash erase_sector 0 0 last; reset halt; exit"
 	
 load:
-	openocd -f /opt/homebrew/Cellar/open-ocd/0.12.0_1/share/openocd/scripts/board/stm32f4discovery.cfg -f /opt/homebrew/Cellar/open-ocd/0.12.0_1/share/openocd/scripts/interface/stlink.cfg -c "program target/bootloader verify reset exit"
+	openocd -f /opt/homebrew/Cellar/open-ocd/0.12.0_1/share/openocd/scripts/board/stm32f4discovery.cfg -f /opt/homebrew/Cellar/open-ocd/0.12.0_1/share/openocd/scripts/interface/stlink.cfg -c "program target/duos verify reset exit"
 

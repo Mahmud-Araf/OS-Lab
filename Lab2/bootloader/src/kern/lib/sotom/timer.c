@@ -90,3 +90,18 @@ void TIM2_Handler() {
   TIM2->CNT = 0;
   SYS_ROUTINE();
 }
+
+void DisableTimer2(void)
+{
+  __NVIC_DisableIRQ(TIM2_IRQn);
+ 
+  TIM2->CR1 &= ~(1 << 0);
+ 
+  TIM2_READY_TO_USE = 0;
+ 
+  TIM2->CNT = 0;
+ 
+  TIM2_INTERRUPT_CALL_COUNT = 0;
+ 
+  RCC->APB1ENR &= ~(1 << 0);
+}

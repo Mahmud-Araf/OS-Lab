@@ -20,6 +20,7 @@ void Delay(uint32_t delay); // milisecond
 void Delay_micro_second(uint32_t delay);
 uint32_t getMiliseconds(); // can track upto 71days
 uint32_t getMicroseconds(); // upto 1 hour 12 min
+void DisableTimer2(void);
 
 
 #ifdef  __cplusplus

@@ -37,18 +37,10 @@ extern "C" {
 #include<stdint.h>
 
 #define SET_ACT_DEV(QUEUE,DEV)  (QUEUE |= DEV)
+#define VERSION_ADDR ((volatile uint32_t *)0x2000FFFCU)
 void __sys_init(void); 
 void SoftReset(void);
-void __sys_disable(void);
-char* get_updated_os(void);
-int get_size(void);
-int check_version(void);
-void system_update(void);
-char *get_server_version(void);
-
 uint32_t verify_connectivity(void);
-
-#define OS_VERSION_ADDRESS 0x0807F000 // Safe address near the end of flash memory
 
 #ifdef __cplusplus
 }

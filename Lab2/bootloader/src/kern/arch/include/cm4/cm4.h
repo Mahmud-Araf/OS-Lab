@@ -673,6 +673,7 @@ __attribute__ ((__noreturn__)) static __inline void  __NVIC_SystemReset(void)
     __NOP();
   }
 }
+
 /**
 * Function related to SysTick
 */

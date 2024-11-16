@@ -126,6 +126,8 @@ void Uart_isr (UART_HandleTypeDef *huart);
 int32_t update_tail(UART_HandleTypeDef *,uint32_t);
 
 void debug_buffer(UART_HandleTypeDef *);
+
+void DisableUart(UART_HandleTypeDef *huart);
 #ifdef __cplusplus
 }
 #endif
