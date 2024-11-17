@@ -2,23 +2,44 @@ import math
 import os
 import serial
 
-CHUNK_SIZE = 500  # 32 bytes data
+CHUNK_SIZE = 512  # 512 Bytes
 FILE_PATH = 'duos24_latest_release/src/compile/target/duos'
-SERIAL_PORT = "/dev/tty.usbmodem1203"
+SERIAL_PORT = '/dev/tty.usbmodem1203'
+POLYNOMIAL = 0x04C11DB7
+CRC_TABLE = []
+
+
 
 class TerminalServer:
     def __init__(self):
         self.serial_instance = serial.Serial(port=SERIAL_PORT, baudrate=115200)
-        print("Terminal Server Connected to Serial Port:", self.serial_instance.name)
+        self.init_crc_table()
+        print("server - Terminal Server Connected to Serial Port:", self.serial_instance.name)
         with open('version.txt', 'r') as file:
             self.latest_version = float(file.read())
-            print("Server OS version: ",self.latest_version)
+            print("server - Server OS version: ",self.latest_version)
+
+    def init_crc_table():
+        for i in range(256):
+            crc = i << 24
+            for _ in range(8):
+                if crc & 0x80000000:
+                    crc = (crc << 1) ^ POLYNOMIAL
+                else:
+                    crc <<= 1
+            CRC_TABLE.append(crc & 0xFFFFFFFF)
+
+    def calc_crc_32(data):
+        crc = 0xFFFFFFFF
+        for byte in data:
+            crc = (crc << 8) ^ CRC_TABLE[((crc >> 24) ^ byte) & 0xFF]
+        return crc ^ 0xFFFFFFFF
 
     def run(self):
         try:
             while True:
                 value = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
-                print("me - " + value)
+                print("mc - " + value)
                 
                 cmd = value.split()
                 
@@ -27,7 +48,7 @@ class TerminalServer:
                 elif cmd[0] == "GET_UPDATE":
                     self.get_update()
         except KeyboardInterrupt:
-            print("Keyboard Interrupt detected. Exiting...")
+            print("server - Keyboard Interrupt detected. Exiting...")
         finally:
             self.serial_instance.close()
 
@@ -41,7 +62,7 @@ class TerminalServer:
 
     def get_update(self):
         file_size = os.path.getsize(FILE_PATH)
-        print(f"File size: {file_size} Bytes")
+        print(f"server - File size: {file_size} Bytes")
         packet = str(file_size).encode('utf-8') + b'$'
         
         self.serial_instance.write(packet)
@@ -49,7 +70,7 @@ class TerminalServer:
         print(ack)
         
         if ack == "ACK":
-            print("File size sent successfully")
+            print("server - File size sent successfully")
             
             with open(FILE_PATH, 'rb') as file:
                 current_chunk_number = 1
@@ -72,14 +93,14 @@ class TerminalServer:
                         else:
                             file_size = 0
                     elif ack == "NACK":
-                        print(f"Error while sending chunk number {current_chunk_number}")
+                        print(f"server - Error while sending chunk number {current_chunk_number}")
                         break
             
             if file_size == 0:
-                print("File sent successfully")
+                print("server - File sent successfully")
                     
         elif ack == "NACK":
-            print("Error while sending file size")
+            print("server - Error while sending file size")
 
 if __name__ == "__main__":
     updater = TerminalServer()

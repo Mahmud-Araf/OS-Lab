@@ -104,7 +104,6 @@ extern "C" {
 #define SYSCFG  ((SYSCFG_TypeDef *)SYSCFG_BASE)
 #define FLASH	    ((FLASH_TypeDef *)FLASH_BASE)
 
-
 /*
 * Data Structure for Reset and Clock Control Registers (RCC), Address Range: 0x4002 3800 - 0x4002 3BFF */
 typedef struct __rcc_t
@@ -8745,7 +8744,6 @@ typedef struct
 #define CAN_F13R2_FB31_Pos     (31U)
 #define CAN_F13R2_FB31_Msk     (0x1UL << CAN_F13R2_FB31_Pos)                    /*!< 0x80000000 */
 #define CAN_F13R2_FB31         CAN_F13R2_FB31_Msk                              /*!<Filter bit 31 */
-
 
 
 #ifdef __cplusplus

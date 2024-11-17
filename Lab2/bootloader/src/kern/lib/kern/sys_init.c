@@ -24,8 +24,12 @@ void get_os_version(void);
 void display_status(void);
 
 char updated_os[100005];
+
 int os_size;
+
 int update_flag = 0;
+
+const int CHUNK_SIZE = 512;
 
 char os_version[4] = {0, 0, 0, 0};  
 
@@ -86,6 +90,8 @@ void __sys_disable(void)
     ms_delay(5000);
 }
 
+
+
 /*
  * Do not remove it is for debug purpose
  */
@@ -121,7 +127,6 @@ int check_version(void)
 {
     get_os_version();
     kprintf("CHECK_VERSION %s\n", os_version);
-    // kprintf("CHECK_VERSION 1.0\n");
 
     int vflag=0;
     char response[50];
@@ -196,19 +201,14 @@ void system_update(void)
         kscanf("%c", &c);
         if (c != '$')
         {
-            // kprintf("%c\n", c);
             len[j++] = c;
         }
     } while (c != '$');
-    // kprintf("%d\n", j);
 
     file_size = char_array_to_int(len, j);
     os_size = file_size;
 
-    // kprintf("%d\n", file_size);
     kprintf("ACK\n");
-
-    const int CHUNK_SIZE = 500;
 
     // read file chunk by chunk
     while (file_size != 0)
@@ -233,7 +233,7 @@ void system_update(void)
             file_size = 0;
         }
         kprintf("ACK\n");
-        // kprintf("%d\n", file_size);
+
     }
 
     kprintf("File Size %d Bytes\n", os_size);
