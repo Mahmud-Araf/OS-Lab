@@ -1,41 +1,47 @@
 import math
 import os
+import struct
 import serial
 
 CHUNK_SIZE = 512  # 512 Bytes
 FILE_PATH = 'duos24_latest_release/src/compile/target/duos'
 SERIAL_PORT = '/dev/tty.usbmodem1203'
 POLYNOMIAL = 0x04C11DB7
-CRC_TABLE = []
-
-
 
 class TerminalServer:
     def __init__(self):
         self.serial_instance = serial.Serial(port=SERIAL_PORT, baudrate=115200)
-        self.init_crc_table()
         print("server - Terminal Server Connected to Serial Port:", self.serial_instance.name)
         with open('version.txt', 'r') as file:
             self.latest_version = float(file.read())
-            print("server - Server OS version: ",self.latest_version)
+            print("server - Server OS version: ", self.latest_version)
 
-    def init_crc_table():
-        for i in range(256):
-            crc = i << 24
-            for _ in range(8):
-                if crc & 0x80000000:
-                    crc = (crc << 1) ^ POLYNOMIAL
-                else:
-                    crc <<= 1
-            CRC_TABLE.append(crc & 0xFFFFFFFF)
-
-    def calc_crc_32(data):
-        crc = 0xFFFFFFFF
+    def calc_crc_32(self, data, crc = 0xFFFFFFFF) -> int:
+        """Calculate CRC32 to match STM32 hardware CRC behavior."""
         for byte in data:
-            crc = (crc << 8) ^ CRC_TABLE[((crc >> 24) ^ byte) & 0xFF]
-        return crc ^ 0xFFFFFFFF
+            crc = self.crc32(byte, crc)
+            
+        remaining_bytes = len(data) % 4
+        if remaining_bytes > 0:
+            for _ in range(4 - remaining_bytes):
+                crc = self.crc32(0, crc)
+
+        return crc
+    
+    def crc32(self, data, crc = 0xFFFFFFFF) -> int:
+        crc = crc ^ data
+
+        for i in range(32):
+            if (crc & 0x80000000) != 0:
+                crc = (crc << 1) ^ POLYNOMIAL
+                
+            else:
+                crc = crc << 1
+        
+        return crc & 0xFFFFFFFF
 
     def run(self):
+        """Run the terminal server."""
         try:
             while True:
                 value = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
@@ -53,6 +59,7 @@ class TerminalServer:
             self.serial_instance.close()
 
     def check_version(self, cmd):
+        """Check if the firmware version matches the latest version."""
         current_version = float(cmd[1])
         if math.isclose(current_version, self.latest_version, rel_tol=1e-9):
             response = "NO_UPDATES_AVAILABLE\n".encode('utf-8')
@@ -61,13 +68,14 @@ class TerminalServer:
         self.serial_instance.write(response)
 
     def get_update(self):
+        """Send the firmware update file in chunks with CRC validation."""
         file_size = os.path.getsize(FILE_PATH)
         print(f"server - File size: {file_size} Bytes")
         packet = str(file_size).encode('utf-8') + b'$'
         
         self.serial_instance.write(packet)
         ack = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
-        print(ack)
+        print("mc -",ack)
         
         if ack == "ACK":
             print("server - File size sent successfully")
@@ -78,14 +86,21 @@ class TerminalServer:
                 
                 while file_size:
                     chunk = file.read(CHUNK_SIZE)
-                    packet = chunk
+                    padded_chunk = chunk + b'\x00' * (CHUNK_SIZE - len(chunk)) 
                     
-                    self.serial_instance.write(packet)
+                    # Calculate CRC
+                    crc = self.calc_crc_32(padded_chunk)
+                    
+                    # Send CRC
+                    self.serial_instance.write(struct.pack('>I', crc))
+                    
+                    # Send data chunk
+                    self.serial_instance.write(chunk)
                     ack = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
-                    print(ack)
+                    print("mc -",ack)
                     
                     if ack != "NACK":
-                        print(f"{current_chunk_number} / {total_chunk_number} chunks are sent successfully")
+                        print(f"server - {current_chunk_number} / {total_chunk_number} chunks sent successfully")
                         current_chunk_number += 1
                         
                         if file_size >= CHUNK_SIZE:

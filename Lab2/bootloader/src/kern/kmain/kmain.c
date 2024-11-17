@@ -223,7 +223,7 @@ void set_os_version( char *version)
 void kmain(void)
 {
 
-    __sys_init();
+    __sys_init(); //check version and file update
 
     char *updated_os = get_updated_os();
 
@@ -249,11 +249,6 @@ void kmain(void)
     flash_write(updated_os, len, OS_START_ADDRESS - 0x1000);
     ms_delay(1000);
     kprintf("Write Successful\n");
-
-    flash_read(NULL, 100, OS_START_ADDRESS - 10);
-
-    kprintf("Read Successful\n");
-    ms_delay(1000); 
 
     if(get_server_version() != NULL)
     {

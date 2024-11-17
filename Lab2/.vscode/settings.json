@@ -6,6 +6,11 @@
         "usartringbuffer.h": "c",
         "sys_clock.h": "c",
         "serial_lin.h": "c",
-        "timer.h": "c"
+        "timer.h": "c",
+        "ios": "c",
+        "locale": "c",
+        "*.tcc": "c",
+        "functional": "c",
+        "type_traits": "c"
     }
 }

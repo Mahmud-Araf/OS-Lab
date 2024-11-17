@@ -31,9 +31,12 @@ int update_flag = 0;
 
 const int CHUNK_SIZE = 512;
 
-char os_version[4] = {0, 0, 0, 0};  
+char os_version[4] = {0, 0, 0, 0};
 
-char server_version[4]={0,0,0,0};
+char server_version[4] = {0, 0, 0, 0};
+
+static void MX_CRC_Init(void);
+uint32_t calculate_crc32(uint8_t *data, uint32_t length);
 
 void __sys_init(void)
 {
@@ -49,6 +52,7 @@ void __sys_init(void)
     Ringbuf_init(__CONSOLE);
     Ringbuf_init(&huart6);
     ConfigTimer2ForSystem();
+    MX_CRC_Init(); // CRC peripheral initialization
     __ISB();
 #ifdef DEBUG
     // kprintf("\n************************************\r\n");
@@ -70,6 +74,27 @@ void __sys_init(void)
 #endif
 }
 
+static void MX_CRC_Init(void)
+{
+    // Enable CRC peripheral clock
+    RCC->AHB1ENR |= RCC_AHB1ENR_CRCEN;
+}
+
+uint32_t calculate_crc32(uint8_t *data, uint32_t length)
+{
+    // Reset the CRC calculation unit
+    CRCR->CR = CRC_CR_RESET;
+
+    // Write data to the CRC Data Register
+    for (uint32_t i = 0; i < length; i++)
+    {
+        CRCR->DR = data[i];
+    }
+
+    // Return the CRC value
+    return CRCR->DR;
+}
+
 void __sys_disable(void)
 {
 
@@ -89,8 +114,6 @@ void __sys_disable(void)
 
     ms_delay(5000);
 }
-
-
 
 /*
  * Do not remove it is for debug purpose
@@ -127,8 +150,9 @@ int check_version(void)
 {
     get_os_version();
     kprintf("CHECK_VERSION %s\n", os_version);
+    // kprintf("CHECK_VERSION 1.0\n");
 
-    int vflag=0;
+    int vflag = 0;
     char response[50];
     int i = 0;
     int j = 0;
@@ -138,14 +162,14 @@ int check_version(void)
         kscanf("%c", &c);
         response[i++] = c;
 
-        if(vflag==1 && c!='\n')
+        if (vflag == 1 && c != '\n')
         {
             server_version[j++] = c;
         }
 
-        if(c == ' ')
+        if (c == ' ')
         {
-            vflag=1;
+            vflag = 1;
         }
     } while (c != '\n');
 
@@ -154,14 +178,13 @@ int check_version(void)
     kprintf("%s", response);
     kprintf("Server Version: %s\n", server_version);
 
-
     int ret = compare_strings(response, "UPDATE_AVAILABLE");
 
     if (ret == 0)
-    {   
+    {
         return 1;
     }
- 
+
     return 0;
 }
 
@@ -215,15 +238,38 @@ void system_update(void)
     {
         c = 0;
         int n = CHUNK_SIZE;
+
         if (file_size < CHUNK_SIZE)
         {
             n = file_size;
         }
+
+        char chunk[CHUNK_SIZE];
+
+        uint32_t crc_server = 0;
+
+        for (int i = 0; i < 4; i++)
+        {
+            uint8_t byte;
+            kscanf("%c", &byte);
+            crc_server = (crc_server << 8) | byte;
+        }
+
         for (int k = 0; k < n; k++)
         {
             kscanf("%c", &c);
             updated_os[i++] = c;
+            chunk[k] = c;
         }
+        uint32_t crc;
+        crc = calculate_crc32((uint8_t *)chunk, n);
+
+        if (crc_server != crc)
+        {
+            kprintf("%x %x\n", crc_server, crc);
+            kprintf("CRC_ERROR\n");
+        }
+
         if (file_size >= CHUNK_SIZE)
         {
             file_size -= CHUNK_SIZE;
@@ -233,7 +279,6 @@ void system_update(void)
             file_size = 0;
         }
         kprintf("ACK\n");
-
     }
 
     kprintf("File Size %d Bytes\n", os_size);
@@ -242,7 +287,7 @@ void system_update(void)
 
 char *get_updated_os(void)
 {
-    if(update_flag == 1)
+    if (update_flag == 1)
     {
         return updated_os;
     }
@@ -257,7 +302,7 @@ int get_size(void)
 
 char *get_server_version(void)
 {
-    if(server_version[0] != 0)
+    if (server_version[0] != 0)
     {
         return server_version;
     }
@@ -267,7 +312,7 @@ char *get_server_version(void)
 
 void get_os_version(void)
 {
-   
+
     for (uint32_t i = 0; i < 4; i += 1)
     {
         uint8_t val = *(uint8_t *)(OS_VERSION_ADDRESS + i);
