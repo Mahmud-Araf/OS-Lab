@@ -18,7 +18,6 @@
 #define FLASH_KEY1 0x45670123
 #define FLASH_KEY2 0xCDEF89AB
 
-#define VERSION_ADDR ((volatile uint32_t *)0x2000FFFCU)
 
 #endif
 
@@ -29,7 +28,6 @@ static void vector_setup(void)
 
 static void jump_to_os(void)
 {
-    *VERSION_ADDR = 10;
 
     typedef void (*void_fn)(void);
 
@@ -116,7 +114,7 @@ void erase_os_memory_in_flash()
 
             FLASH->SR |= (FLASH_SR_WRPERR | FLASH_SR_PGAERR | FLASH_SR_PGPERR | FLASH_SR_PGSERR);
 
-            FLASH->CR &= ~FLASH_CR_SER;
+            FLASH->CR &= ~FLASH_CR_SER; // Clear sector erase bit after each erase
 
             flash_lock();
             return;
@@ -225,20 +223,20 @@ void kmain(void)
 
     __sys_init(); //check version and file update
 
-    char *updated_os = get_updated_os();
+    char *updated_os = get_updated_os(); // Get the updated OS
 
-    if(updated_os == NULL)
+    if(updated_os == NULL) // No OS update found
     {
-        kprintf("No OS Update Found\n");
+        kprintf("No OS Update Found\n"); 
+        ms_delay(1000);
         jump_to_os();
     }
 
-    int len = get_size();
+    int len = get_size(); 
 
     __ISB();
 
     kprintf("OS Size: %d\n", len);
-    kprintf("message received : ");
 
     ms_delay(1000);
 

@@ -1,5 +1,3 @@
-
-
 #include <sys_init.h>
 #include <cm4.h>
 #include <sys_clock.h>
@@ -9,6 +7,7 @@
 #include <kstdio.h>
 #include <debug.h>
 #include <timer.h>
+#include <sys_bus_matrix.h>
 #include <UsartRingBuffer.h>
 #include <system_config.h>
 #include <mcu_info.h>
@@ -29,7 +28,9 @@ int os_size;
 
 int update_flag = 0;
 
-const int CHUNK_SIZE = 512;
+int crc_error_flag = 0;
+
+const int CHUNK_SIZE = 4;
 
 char os_version[4] = {0, 0, 0, 0};
 
@@ -66,6 +67,7 @@ void __sys_init(void)
     // show_system_info();
     display_status();
     update_flag = 0;
+    crc_error_flag = 0;
     if (check_version() == 1)
     {
         system_update();
@@ -78,17 +80,16 @@ static void MX_CRC_Init(void)
 {
     // Enable CRC peripheral clock
     RCC->AHB1ENR |= RCC_AHB1ENR_CRCEN;
+    CRCR->CR = CRC_CR_RESET;
 }
 
 uint32_t calculate_crc32(uint8_t *data, uint32_t length)
 {
-    // Reset the CRC calculation unit
-    CRCR->CR = CRC_CR_RESET;
 
     // Write data to the CRC Data Register
     for (uint32_t i = 0; i < length; i++)
     {
-        CRCR->DR = data[i];
+        CRCR->DR =(uint32_t) data[i];
     }
 
     // Return the CRC value
@@ -174,15 +175,19 @@ int check_version(void)
     } while (c != '\n');
 
     server_version[j] = '\0';
-
-    kprintf("%s", response);
-    kprintf("Server Version: %s\n", server_version);
+    
 
     int ret = compare_strings(response, "UPDATE_AVAILABLE");
 
     if (ret == 0)
-    {
+    {   
+        kprintf("Server Version: %s\n", server_version);
         return 1;
+    }
+
+    for(int i=0;i<3;i++)
+    {
+        server_version[i]=0;
     }
 
     return 0;
@@ -266,8 +271,10 @@ void system_update(void)
 
         if (crc_server != crc)
         {
-            kprintf("%x %x\n", crc_server, crc);
             kprintf("CRC_ERROR\n");
+            crc_error_flag = 1;
+            kprintf("RESEND\n");
+            return;
         }
 
         if (file_size >= CHUNK_SIZE)
@@ -280,9 +287,7 @@ void system_update(void)
         }
         kprintf("ACK\n");
     }
-
     kprintf("File Size %d Bytes\n", os_size);
-    kprintf("%d\n", i);
 }
 
 char *get_updated_os(void)
@@ -298,6 +303,11 @@ char *get_updated_os(void)
 int get_size(void)
 {
     return os_size;
+}
+
+int get_crc_error(void)
+{
+    return crc_error_flag;
 }
 
 char *get_server_version(void)

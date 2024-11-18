@@ -45,7 +45,7 @@ int get_size(void);
 int check_version(void);
 void system_update(void);
 char *get_server_version(void);
-
+int get_crc_error(void);
 uint32_t verify_connectivity(void);
 
 #define OS_VERSION_ADDRESS 0x0807F000 // Safe address near the end of flash memory

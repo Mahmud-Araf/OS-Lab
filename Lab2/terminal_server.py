@@ -3,9 +3,9 @@ import os
 import struct
 import serial
 
-CHUNK_SIZE = 512  # 512 Bytes
-FILE_PATH = 'duos24_latest_release/src/compile/target/duos'
-SERIAL_PORT = '/dev/tty.usbmodem1203'
+CHUNK_SIZE = 4 
+FILE_PATH = 'duos24/src/compile/target/duos'
+SERIAL_PORT = '/dev/tty.usbmodem1303'
 POLYNOMIAL = 0x04C11DB7
 
 class TerminalServer:
@@ -14,18 +14,12 @@ class TerminalServer:
         print("server - Terminal Server Connected to Serial Port:", self.serial_instance.name)
         with open('version.txt', 'r') as file:
             self.latest_version = float(file.read())
-            print("server - Server OS version: ", self.latest_version)
+            print("server - Server OS version:", self.latest_version)
 
     def calc_crc_32(self, data, crc = 0xFFFFFFFF) -> int:
         """Calculate CRC32 to match STM32 hardware CRC behavior."""
         for byte in data:
             crc = self.crc32(byte, crc)
-            
-        remaining_bytes = len(data) % 4
-        if remaining_bytes > 0:
-            for _ in range(4 - remaining_bytes):
-                crc = self.crc32(0, crc)
-
         return crc
     
     def crc32(self, data, crc = 0xFFFFFFFF) -> int:
@@ -54,6 +48,7 @@ class TerminalServer:
                 elif cmd[0] == "GET_UPDATE":
                     self.get_update()
         except KeyboardInterrupt:
+            print()
             print("server - Keyboard Interrupt detected. Exiting...")
         finally:
             self.serial_instance.close()
@@ -83,13 +78,15 @@ class TerminalServer:
             with open(FILE_PATH, 'rb') as file:
                 current_chunk_number = 1
                 total_chunk_number = int(math.ceil(file_size / CHUNK_SIZE))
+
+                crc = 0xFFFFFFFF
                 
                 while file_size:
                     chunk = file.read(CHUNK_SIZE)
                     padded_chunk = chunk + b'\x00' * (CHUNK_SIZE - len(chunk)) 
                     
                     # Calculate CRC
-                    crc = self.calc_crc_32(padded_chunk)
+                    crc = self.calc_crc_32(padded_chunk,crc)
                     
                     # Send CRC
                     self.serial_instance.write(struct.pack('>I', crc))
@@ -99,7 +96,7 @@ class TerminalServer:
                     ack = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
                     print("mc -",ack)
                     
-                    if ack != "NACK":
+                    if ack == "ACK":
                         print(f"server - {current_chunk_number} / {total_chunk_number} chunks sent successfully")
                         current_chunk_number += 1
                         
@@ -110,6 +107,30 @@ class TerminalServer:
                     elif ack == "NACK":
                         print(f"server - Error while sending chunk number {current_chunk_number}")
                         break
+                    elif ack == "RESEND":
+                        i=0
+                        while True:
+                            self.serial_instance.write(struct.pack('>I', crc))
+                            self.serial_instance.write(chunk)
+                            print(f"server - Resending chunk number {current_chunk_number}")
+                            ack = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
+                            print("mc -",ack)   
+                            i+=1    
+                            if ack == "ACK":
+                                print(f"server - {current_chunk_number} / {total_chunk_number} chunks sent successfully")
+                                current_chunk_number += 1
+                                
+                                if file_size >= CHUNK_SIZE:
+                                    file_size -= CHUNK_SIZE
+                                else:
+                                    file_size = 0
+                                break
+                            elif i==3:
+                                print(f"server - Error while sending chunk number {current_chunk_number}")
+                                break
+
+                        
+                        
             
             if file_size == 0:
                 print("server - File sent successfully")
