@@ -3,7 +3,7 @@ import os
 import struct
 import serial
 
-CHUNK_SIZE = 4 
+CHUNK_SIZE = 4
 FILE_PATH = 'duos24/src/compile/target/duos'
 SERIAL_PORT = '/dev/tty.usbmodem1303'
 POLYNOMIAL = 0x04C11DB7
@@ -16,22 +16,22 @@ class TerminalServer:
             self.latest_version = float(file.read())
             print("server - Server OS version:", self.latest_version)
 
-    def calc_crc_32(self, data, crc = 0xFFFFFFFF) -> int:
+    def calc_crc_32(self, data, crc=0xFFFFFFFF) -> int:
         """Calculate CRC32 to match STM32 hardware CRC behavior."""
-        for byte in data:
-            crc = self.crc32(byte, crc)
+        for i in range(0, len(data), 4):
+            chunk = data[i:i+4]
+            if len(chunk) < 4:
+                chunk = chunk.ljust(4, b'\x00')  # Pad with zeros if less than 4 bytes
+            crc = self.crc32(struct.unpack('>I', chunk)[0], crc)
         return crc
-    
-    def crc32(self, data, crc = 0xFFFFFFFF) -> int:
-        crc = crc ^ data
 
+    def crc32(self, data, crc=0xFFFFFFFF) -> int:
+        crc = crc ^ data
         for i in range(32):
             if (crc & 0x80000000) != 0:
                 crc = (crc << 1) ^ POLYNOMIAL
-                
             else:
                 crc = crc << 1
-        
         return crc & 0xFFFFFFFF
 
     def run(self):
@@ -79,14 +79,14 @@ class TerminalServer:
                 current_chunk_number = 1
                 total_chunk_number = int(math.ceil(file_size / CHUNK_SIZE))
 
-                crc = 0xFFFFFFFF
+                # crc = 0xFFFFFFFF
                 
                 while file_size:
                     chunk = file.read(CHUNK_SIZE)
                     padded_chunk = chunk + b'\x00' * (CHUNK_SIZE - len(chunk)) 
                     
                     # Calculate CRC
-                    crc = self.calc_crc_32(padded_chunk,crc)
+                    crc = self.calc_crc_32(padded_chunk)
                     
                     # Send CRC
                     self.serial_instance.write(struct.pack('>I', crc))
@@ -110,9 +110,9 @@ class TerminalServer:
                     elif ack == "RESEND":
                         i=0
                         while True:
+                            print(f"server - Resending chunk number {current_chunk_number}")
                             self.serial_instance.write(struct.pack('>I', crc))
                             self.serial_instance.write(chunk)
-                            print(f"server - Resending chunk number {current_chunk_number}")
                             ack = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
                             print("mc -",ack)   
                             i+=1    

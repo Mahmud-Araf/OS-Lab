@@ -85,11 +85,23 @@ static void MX_CRC_Init(void)
 
 uint32_t calculate_crc32(uint8_t *data, uint32_t length)
 {
-
-    // Write data to the CRC Data Register
-    for (uint32_t i = 0; i < length; i++)
+    CRCR->CR = CRC_CR_RESET;
+    // Write data to the CRC Data Register 4 bytes at a time
+    for (uint32_t i = 0; i < length; i += 4)
     {
-        CRCR->DR =(uint32_t) data[i];
+        uint32_t chunk = 0;
+        for (uint32_t j = 0; j < 4; j++)
+        {
+            if (i + j < length)
+            {
+                chunk |= (uint32_t)data[i + j] << (24 - j * 8);
+            }
+            else
+            {
+                chunk |= 0 << (24 - j * 8); // Pad with 0 if size is less than 4
+            }
+        }
+        CRCR->DR = chunk;
     }
 
     // Return the CRC value
@@ -263,7 +275,6 @@ void system_update(void)
         for (int k = 0; k < n; k++)
         {
             kscanf("%c", &c);
-            updated_os[i++] = c;
             chunk[k] = c;
         }
         uint32_t crc;
@@ -274,7 +285,12 @@ void system_update(void)
             kprintf("CRC_ERROR\n");
             crc_error_flag = 1;
             kprintf("RESEND\n");
-            return;
+            continue;
+        }
+
+        for (int k = 0; k < n; k++)
+        {
+            updated_os[i++] = chunk[k];
         }
 
         if (file_size >= CHUNK_SIZE)
