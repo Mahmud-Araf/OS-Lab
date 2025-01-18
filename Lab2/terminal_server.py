@@ -3,9 +3,9 @@ import os
 import struct
 import serial
 
-CHUNK_SIZE = 4
+CHUNK_SIZE = 1024
 FILE_PATH = 'duos24/src/compile/target/duos'
-SERIAL_PORT = '/dev/tty.usbmodem1303'
+SERIAL_PORT = '/dev/tty.usbmodem1203'
 POLYNOMIAL = 0x04C11DB7
 
 class TerminalServer:
@@ -70,7 +70,7 @@ class TerminalServer:
         
         self.serial_instance.write(packet)
         ack = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
-        print("mc -",ack)
+        print("mc -", ack)
         
         if ack == "ACK":
             print("server - File size sent successfully")
@@ -78,64 +78,58 @@ class TerminalServer:
             with open(FILE_PATH, 'rb') as file:
                 current_chunk_number = 1
                 total_chunk_number = int(math.ceil(file_size / CHUNK_SIZE))
-
-                # crc = 0xFFFFFFFF
+                remaining_size = file_size
                 
-                while file_size:
-                    chunk = file.read(CHUNK_SIZE)
-                    padded_chunk = chunk + b'\x00' * (CHUNK_SIZE - len(chunk)) 
+                while remaining_size > 0:
+                    # Read chunk and handle last chunk properly
+                    chunk = file.read(min(CHUNK_SIZE, remaining_size))
+                    chunk_size = len(chunk)
                     
-                    # Calculate CRC
-                    crc = self.calc_crc_32(padded_chunk)
+                    # Pad the chunk if it's the last one and smaller than CHUNK_SIZE
+                    if chunk_size < CHUNK_SIZE:
+                        padded_chunk = chunk + b'\x00' * (CHUNK_SIZE - chunk_size)
+                    else:
+                        padded_chunk = chunk
                     
-                    # Send CRC
-                    self.serial_instance.write(struct.pack('>I', crc))
+                    # Calculate CRC on the actual data (not padded)
+                    crc = self.calc_crc_32(chunk)
                     
-                    # Send data chunk
-                    self.serial_instance.write(chunk)
-                    ack = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
-                    print("mc -",ack)
+                    max_retries = 3
+                    retry_count = 0
                     
-                    if ack == "ACK":
-                        print(f"server - {current_chunk_number} / {total_chunk_number} chunks sent successfully")
-                        current_chunk_number += 1
+                    while retry_count < max_retries:
+                        # Send CRC
+                        self.serial_instance.write(struct.pack('>I', crc))
                         
-                        if file_size >= CHUNK_SIZE:
-                            file_size -= CHUNK_SIZE
-                        else:
-                            file_size = 0
-                    elif ack == "NACK":
-                        print(f"server - Error while sending chunk number {current_chunk_number}")
-                        break
-                    elif ack == "RESEND":
-                        i=0
-                        while True:
-                            print(f"server - Resending chunk number {current_chunk_number}")
-                            self.serial_instance.write(struct.pack('>I', crc))
-                            self.serial_instance.write(chunk)
-                            ack = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
-                            print("mc -",ack)   
-                            i+=1    
-                            if ack == "ACK":
-                                print(f"server - {current_chunk_number} / {total_chunk_number} chunks sent successfully")
-                                current_chunk_number += 1
-                                
-                                if file_size >= CHUNK_SIZE:
-                                    file_size -= CHUNK_SIZE
-                                else:
-                                    file_size = 0
-                                break
-                            elif i==3:
-                                print(f"server - Error while sending chunk number {current_chunk_number}")
-                                break
-
+                        # Send actual chunk size for last chunk
+                        self.serial_instance.write(struct.pack('>I', chunk_size))
                         
+                        # Send data chunk (padded if necessary)
+                        self.serial_instance.write(padded_chunk)
                         
-            
-            if file_size == 0:
+                        ack = self.serial_instance.readline().decode('utf-8', errors='ignore').strip()
+                        print("mc -", ack)
+                        
+                        if ack == "ACK":
+                            print(f"server - {current_chunk_number} / {total_chunk_number} chunks sent successfully")
+                            break
+                        elif ack == "RESEND":
+                            print(f"server - Retrying chunk {current_chunk_number} (attempt {retry_count + 1})")
+                            retry_count += 1
+                            continue
+                        else:  # NACK or unexpected response
+                            print(f"server - Error while sending chunk {current_chunk_number}")
+                            return
+                    
+                    if retry_count >= max_retries:
+                        print(f"server - Failed to send chunk {current_chunk_number} after {max_retries} attempts")
+                        return
+                    
+                    current_chunk_number += 1
+                    remaining_size -= chunk_size
+                
                 print("server - File sent successfully")
-                    
-        elif ack == "NACK":
+        else:
             print("server - Error while sending file size")
 
 if __name__ == "__main__":

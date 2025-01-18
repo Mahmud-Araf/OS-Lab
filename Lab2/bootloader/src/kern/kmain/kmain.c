@@ -215,7 +215,7 @@ void flash_read(uint8_t *data, uint32_t length, uint32_t start_address)
 
 void set_os_version( char *version)
 {
-    flash_write(version, 4, OS_VERSION_ADDRESS);    
+    flash_write((uint8_t*)version, 4, OS_VERSION_ADDRESS);    
 }
 
 void kmain(void)
@@ -244,7 +244,7 @@ void kmain(void)
     kprintf("Erase Successful\n");
     ms_delay(1000);
 
-    flash_write(updated_os, len, OS_START_ADDRESS - 0x1000);
+    flash_write((uint8_t*)updated_os, len, OS_START_ADDRESS - 0x1000);
     ms_delay(1000);
     kprintf("Write Successful\n");
 

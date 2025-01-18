@@ -30,7 +30,7 @@ int update_flag = 0;
 
 int crc_error_flag = 0;
 
-const int CHUNK_SIZE = 4;
+#define CHUNK_SIZE 1024
 
 char os_version[4] = {0, 0, 0, 0};
 
@@ -251,20 +251,12 @@ void system_update(void)
     kprintf("ACK\n");
 
     // read file chunk by chunk
-    while (file_size != 0)
+    while (file_size > 0)
     {
-        c = 0;
-        int n = CHUNK_SIZE;
-
-        if (file_size < CHUNK_SIZE)
-        {
-            n = file_size;
-        }
-
-        char chunk[CHUNK_SIZE];
-
         uint32_t crc_server = 0;
-
+        uint32_t chunk_size = 0;
+        
+        // Read server CRC
         for (int i = 0; i < 4; i++)
         {
             uint8_t byte;
@@ -272,13 +264,35 @@ void system_update(void)
             crc_server = (crc_server << 8) | byte;
         }
 
-        for (int k = 0; k < n; k++)
+        // Read actual chunk size
+        for (int i = 0; i < 4; i++)
+        {
+            uint8_t byte;
+            kscanf("%c", &byte);
+            chunk_size = (chunk_size << 8) | byte;
+        }
+
+        // Ensure chunk size is valid
+        if (chunk_size > CHUNK_SIZE || chunk_size == 0)
+        {
+            kprintf("NACK\n");
+            return;
+        }
+
+        char chunk[CHUNK_SIZE];
+        
+        // Read the chunk
+        for (int k = 0; k < CHUNK_SIZE; k++)
         {
             kscanf("%c", &c);
-            chunk[k] = c;
+            if (k < chunk_size)
+            {
+                chunk[k] = c;
+            }
         }
-        uint32_t crc;
-        crc = calculate_crc32((uint8_t *)chunk, n);
+
+        // Calculate CRC on actual data (not padding)
+        uint32_t crc = calculate_crc32((uint8_t *)chunk, chunk_size);
 
         if (crc_server != crc)
         {
@@ -288,21 +302,16 @@ void system_update(void)
             continue;
         }
 
-        for (int k = 0; k < n; k++)
+        // Copy only the actual data (not padding)
+        for (int k = 0; k < chunk_size; k++)
         {
             updated_os[i++] = chunk[k];
         }
 
-        if (file_size >= CHUNK_SIZE)
-        {
-            file_size -= CHUNK_SIZE;
-        }
-        else
-        {
-            file_size = 0;
-        }
+        file_size -= chunk_size;
         kprintf("ACK\n");
     }
+    
     kprintf("File Size %d Bytes\n", os_size);
 }
 
