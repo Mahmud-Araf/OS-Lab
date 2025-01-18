@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "kunistd.h": "c",
+        "block.h": "c"
+    }
+}
