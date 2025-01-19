@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "kunistd.h": "c",
-        "block.h": "c"
+        "block.h": "c",
+        "syscall.h": "c"
     }
 }

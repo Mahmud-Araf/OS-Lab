@@ -65,7 +65,7 @@ void start_exec(void){
 		return;
 	}
 	current_task->status = RUNNING;
-	start_task(*current_task->psp);
+	ustart_task(*current_task->psp);
 }
 
 void __set_sleep(TCB_TypeDef *task){
@@ -119,4 +119,8 @@ void print_task_info(TCB_TypeDef *task){
 	kprintf("_____________TASK INFO_____________\n");
 	kprintf("Task ID = %d\n",task->task_id);
 	kprintf("\n");
+}
+
+void __sys_yield(void){
+	SCB->ICSR |= (1 << 28);
 }

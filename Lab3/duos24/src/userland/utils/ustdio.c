@@ -123,5 +123,5 @@ void uprintf(char *format,...)
 
 	va_end(list);
     char *return_param = ans;
-    write_user(1,return_param);
+    uwrite(1,return_param);
 }

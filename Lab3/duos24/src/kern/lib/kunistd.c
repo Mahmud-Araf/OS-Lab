@@ -121,10 +121,6 @@ void __sys_getpid(unsigned int *val, uint16_t value)
     return;
 }
 
-void __sys_get_time(uint32_t *time)
-{
-    *time = __getTime();
-}
 
 int __sys_free(void *ptr)
 {
@@ -189,5 +185,56 @@ int __sys_fork(TCB_TypeDef *parent_task)
     child_stack[6] = 0; // R0 will be 0 when child starts
     
     return child_tcb.task_id; // Return child's PID to parent
+}
+
+int __sys_execv(const char *path, char *const argv[]) {
+    // Get current task
+    extern TCB_TypeDef *current_task;
+    if (!current_task) {
+        kprintf("execv: No current task\n");
+        return -1;
+    }
+
+    // For now, we'll implement a basic version that loads from flash
+    // In a real implementation, we would:
+    // 1. Validate the executable path
+    // 2. Check file permissions
+    // 3. Load the executable from flash to RAM
+    // 4. Set up the new stack frame
+    // 5. Clean up old process resources
+    // 6. Transfer control to new program
+
+    // Get the program entry point from the path
+    // This is a simplified version - in reality we would parse the executable
+    void (*program_entry)(void) = (void (*)(void))path;
+    
+    if (!program_entry) {
+        kprintf("execv: Invalid program path\n");
+        return -1;
+    }
+
+    // Save arguments somewhere accessible to the new program
+    // In a real implementation, we would copy these to the new process's memory space
+    
+    // Clear current process memory except stack
+    // In a real implementation, we would properly clean up resources
+    
+    // Set up initial stack frame for new program
+    uint32_t *sp = current_task->psp;
+    
+    // Save program arguments
+    // In a real implementation, we would copy these to appropriate locations
+    
+    // Update task control block
+    current_task->psp = sp;
+    
+    // Debug output
+    kprintf("execv: Executing program at 0x%x\n", program_entry);
+    
+    // Transfer control to new program
+    program_entry();
+    
+    // Should never reach here on success
+    return -1;
 }
 

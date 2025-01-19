@@ -30,5 +30,8 @@
  
 #ifndef __TIMES_H
 #define __TIMES_H
+#include <stdint.h>
 /* Define times function prototypes here */
+uint32_t uget_time(void);
+
 #endif

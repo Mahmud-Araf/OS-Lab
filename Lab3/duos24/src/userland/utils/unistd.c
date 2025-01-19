@@ -31,7 +31,8 @@
 #include <unistd.h>
 #include <syscall_def.h>
 #include <kstdio.h>
-void fopen(char *name,uint8_t t_access, uint32_t *op_addr) {
+
+void ufopen(char *name, uint8_t t_access, uint32_t *op_addr) {
 	__asm volatile (
 		"mov r0, %[x]\n"
 		"mov r1, %[y]\n"
@@ -46,11 +47,10 @@ void fopen(char *name,uint8_t t_access, uint32_t *op_addr) {
 
 	__asm volatile ("PUSH {r4-r11, ip, lr}");
 	__asm volatile("svc %0" : : "i" (SYS_open));
-
 	__asm volatile ("POP {r4-r11, ip, lr}");
 }
 
-void fclose(uint32_t *op_addr){
+void ufclose(uint32_t *op_addr) {
 	__asm volatile (
 		"mov r0, %[x]\n"
 		:
@@ -58,18 +58,16 @@ void fclose(uint32_t *op_addr){
 	);
 	__asm volatile ("PUSH {r4-r11, ip, lr}");
 	__asm volatile("svc %0" : : "i" (SYS_close));
-
 	__asm volatile ("POP {r4-r11, ip, lr}");
 }
 
-void reboot(void){
+void ureboot(void) {
 	__asm volatile ("PUSH {r4-r11, ip, lr}");
 	__asm volatile("svc %0" : : "i" (SYS_reboot));
-
 	__asm volatile ("POP {r4-r11, ip, lr}");
 }
 
-void read_user(uint8_t fd,char **data,uint32_t size){
+void uread(uint8_t fd, char **data, uint32_t size) {
 	__asm volatile (
 		"mov r0, %[x]\n"
 		"mov r1, %[y]\n"
@@ -83,11 +81,10 @@ void read_user(uint8_t fd,char **data,uint32_t size){
 	);
 	__asm volatile ("PUSH {r4-r11, ip, lr}");
 	__asm volatile("svc %0" : : "i" (SYS_read));
-
 	__asm volatile ("POP {r4-r11, ip, lr}");
 }
 
-void write_user(uint8_t fd,char *data){
+void uwrite(uint8_t fd, char *data) {
 	__asm volatile (
 		"mov r0, %[x]\n"
 		"mov r1, %[y]\n"
@@ -101,32 +98,30 @@ void write_user(uint8_t fd,char *data){
 	__asm volatile ("POP {r4-r11, ip, lr}");
 }
 
-void yeild(void){
+void uyield(void) {
 	__asm volatile("svc %0" : : "i" (SYS_yield));
-
 }
 
-void task_exit(void){
+void utask_exit(void) {
     __asm volatile("PUSH {r5}");
     __asm volatile ("PUSH {r4-r11, ip, lr}");
 	__asm volatile("svc %0" : : "i" (SYS__exit));
 	__asm volatile ("POP {r4-r11, ip, lr}");
-    yeild();
+    uyield();
 }
 
-uint32_t getpid(void){
+uint32_t ugetpid(void) {
     unsigned int pid = 0;
     __asm volatile("mov r5, %[v]": : [v] "r" (&pid));
     __asm volatile("PUSH {r5}");
 
     __asm volatile ("PUSH {r4-r11, ip, lr}");
 	__asm volatile("svc %0" : : "i" (SYS_getpid));
-
 	__asm volatile ("POP {r4-r11, ip, lr}");
     return (uint16_t) pid;
 }
 
-void start_task(uint32_t psp){
+void ustart_task(uint32_t psp) {
 	__asm volatile ("MOV R0, %0"
 		:
 		:"r" (psp)
@@ -134,17 +129,8 @@ void start_task(uint32_t psp){
 	__asm volatile ("PUSH {r4-r11, ip, lr}");
 	__asm volatile("svc %0" : : "i" (SYS_start));
 	__asm volatile ("POP {r4-r11, ip, lr}");
-
 }
 
-uint32_t get_time(void){
-    uint32_t time = 0;
-	__asm volatile("mov r0, %[x]": : [x] "r" (&time));
-	__asm volatile ("PUSH {r4-r11, ip, lr}");
-	__asm volatile("svc %0" : : "i" (SYS___time));
-	__asm volatile ("POP {r4-r11, ip, lr}");
-	return time;
-}
 
 void *umalloc(uint32_t size) {
     void *ptr;
@@ -187,5 +173,27 @@ int ufree(void *ptr) {
     // Debug print the result
     kprintf("ufree: received status %d\n", result);
     
+    return result;
+}
+
+int uexecv(const char *path, char *const argv[]) {
+    int result;
+    
+    // Move arguments to registers
+    __asm volatile(
+        "mov r0, %[path]\n"        // Path to executable
+        "mov r1, %[argv]\n"        // Arguments array
+        "push {r4-r11, ip, lr}\n"  // Save context
+        "svc %[syscall]\n"         // Make system call
+        "mov %[result], r0\n"      // Get result
+        "pop {r4-r11, ip, lr}\n"   // Restore context
+        : [result] "=r" (result)   // Output
+        : [path] "r" (path),       // Inputs
+          [argv] "r" (argv),
+          [syscall] "i" (SYS_execv)
+        : "r0", "r1", "memory"     // Clobbers
+    );
+    
+    // If we get here, execv failed (should not return on success)
     return result;
 }

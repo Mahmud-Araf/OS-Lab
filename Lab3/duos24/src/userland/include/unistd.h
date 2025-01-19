@@ -32,16 +32,16 @@
 #define __UNISTD_H
 #include <stdint.h>
 /* Basic input and output function */
-void fopen(char *name,uint8_t t_access, uint32_t *op_addr);
-void fclose(uint32_t *op_addr);
-void reboot(void);
-void read_user(uint8_t fd,char **data,uint32_t size);
-void write_user(uint8_t fd,char *data);
-void task_exit(void);
-void yeild(void);
-uint32_t getpid(void);
-void start_task(uint32_t psp);
-uint32_t get_time(void);
+void ufopen(char *name, uint8_t t_access, uint32_t *op_addr);
+void ufclose(uint32_t *op_addr);
+void ureboot(void);
+void uread(uint8_t fd, char **data, uint32_t size);
+void uwrite(uint8_t fd, char *data);
+void utask_exit(void);
+void uyield(void);
+uint32_t ugetpid(void);
+void ustart_task(uint32_t psp);
 void *umalloc(uint32_t size);  /* Allocate memory from heap */
 int ufree(void *ptr);  /* Free allocated memory */
+int uexecv(const char *path, char *const argv[]); /* Execute a file */
 #endif

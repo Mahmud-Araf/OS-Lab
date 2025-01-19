@@ -86,22 +86,22 @@ void __move_to_user(void)
 void SVC_Tester(void)
 {
 	char *data = "this is temp";
-	read_user(0, &data, 1);
+	uread(0, &data, 1);
 	kprintf("The data is %s\n", data);
 
 	char *device_name = "GPIOA";
 	uint8_t t_access = 0;
 	uint32_t *op_addr = (uint32_t *)GPIOA;
-	fopen(device_name, t_access, op_addr);
+	ufopen(device_name, t_access, op_addr);
 	print_device_list();
 
-	fclose(op_addr);
+	ufclose(op_addr);
 	print_device_list();
 
 	kprintf("Rebooting");
 	for (int i = 0; i < 1e8; ++i)
 		;
-	reboot();
+	ureboot();
 }
 
 #define STOP 1000000
@@ -113,7 +113,7 @@ void task_1(void)
 {
 	uint32_t value;
 	uint32_t inc_count = 0;
-	uint32_t pid = getpid();
+	uint32_t pid = ugetpid();
 	kprintf("___________________Task %d___________________\n", pid);
 	while (1)
 	{
@@ -134,7 +134,7 @@ void task_1(void)
 			break;
 		}
 	}
-	task_exit();
+	utask_exit();
 }
 
 void sleep_state(void)

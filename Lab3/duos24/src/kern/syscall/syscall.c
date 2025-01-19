@@ -52,7 +52,7 @@ void syscall(uint32_t *svc_args)
 	}
 	case SYS_yield:
 	{
-		SCB->ICSR |= (1 << 28);
+		__sys_yield();
 		break;
 	}
 	case SYS__exit:
@@ -102,6 +102,15 @@ void syscall(uint32_t *svc_args)
 		kprintf("Syscall: malloc returned address 0x%x\n", (unsigned int)ptr);
 		// Store result in r0 slot of saved context
 		svc_args[0] = (uint32_t)ptr;
+		break;
+	}
+	case SYS_execv:
+	{
+		const char *path = (const char *)svc_args[0];
+		char *const *argv = (char *const *)svc_args[1];
+		int result = __sys_execv(path, argv);
+		// Only reaches here if execv failed
+		svc_args[0] = (uint32_t)result;
 		break;
 	}
 	default:;

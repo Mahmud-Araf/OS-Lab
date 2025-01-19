@@ -46,12 +46,12 @@ void __sys_close(uint32_t *);
 void __sys_reboot(void);
 void __sys_start_task(uint32_t);
 void __sys_getpid(unsigned int *val,uint16_t value);
-void __sys_get_time(uint32_t *time);
 int __sys_open(char *name, uint8_t t_access, uint32_t *op_addr);
 int __sys_read(uint32_t fd, char **data, uint32_t size);
 int __sys_write(uint32_t fd, char *data, uint32_t size);
 int __sys_fork(TCB_TypeDef *parent_task);  /* Fork system call */
 int __sys_free(void *ptr);  /* Free allocated memory */
 void *__sys_malloc(uint32_t size);  /* Allocate memory from heap */
+int __sys_execv(const char *path, char *const argv[]); /* Execute a file */
 #endif /* KERN_UNISTD_H */
 

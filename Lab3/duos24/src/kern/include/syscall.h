@@ -35,6 +35,7 @@
 #include <errno.h>
 #include <kstdio.h>
 #include <kunistd.h>
+#include<ktimes.h>
 #include <types.h>
 #include <schedule.h>
 void syscall(uint32_t *svc_args);

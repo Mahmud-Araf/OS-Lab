@@ -56,9 +56,10 @@ void __create_task(TCB_TypeDef *, void(*task)(void), uint32_t *stack_start);
 void __set_sleep(TCB_TypeDef*);
 void start_exec(void);
 
-
+void __sys_yield(void);
 void print_task_info(TCB_TypeDef*);
 void print_entire_queue(void);
+
 #endif
 
 
