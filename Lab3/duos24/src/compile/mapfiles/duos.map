@@ -37,7 +37,7 @@ LOAD object/ustdio.o
 LOAD object/kmem.o
 LOAD object/app.o
 
-.text           0x08000000     0x47d4
+.text           0x08000000     0x4b48
                 0x08000000                        _stext = .
  *(.isr_vector)
  .isr_vector    0x08000000      0x1c4 object/stm32_startup.o
@@ -284,52 +284,56 @@ LOAD object/app.o
                 0x0800364c                __init_memory_manager
                 0x080036e0                __kmem_free
                 0x080037cc                __kmem_malloc
- .text          0x08003944      0x124 object/app.o
-                0x08003944                umain
+ .text          0x08003944      0x21c object/app.o
+                0x08003944                test_memory_management
+                0x08003a00                test_process_management
+                0x08003a44                test_time_functions
+                0x08003a90                test_file_operations
+                0x08003b1c                umain
  *(.rodata)
- .rodata        0x08003a68      0x148 object/kmain.o
- .rodata        0x08003bb0       0x1a object/stm32_startup.o
- *fill*         0x08003bca        0x2 
- .rodata        0x08003bcc       0xcc object/sys_init.o
- .rodata        0x08003c98       0x3b object/unistd.o
- *fill*         0x08003cd3        0x1 
- .rodata        0x08003cd4       0x8a object/kunistd.o
- *fill*         0x08003d5e        0x2 
- .rodata        0x08003d60       0xb3 object/syscall.o
- *fill*         0x08003e13        0x1 
- .rodata        0x08003e14      0x46d object/test_interrupt.o
- *fill*         0x08004281        0x3 
- .rodata        0x08004284        0xf object/dev_table.o
- *fill*         0x08004293        0x1 
- .rodata        0x08004294       0xe6 object/schedule.o
- *fill*         0x0800437a        0x2 
- .rodata        0x0800437c      0x2fd object/kmem.o
- *fill*         0x08004679        0x3 
- .rodata        0x0800467c      0x157 object/app.o
-                0x080047d4                        . = ALIGN (0x4)
- *fill*         0x080047d3        0x1 
-                0x080047d4                        _etext = .
-                0x080047d4                        _la_data = LOADADDR (.data)
+ .rodata        0x08003b60      0x148 object/kmain.o
+ .rodata        0x08003ca8       0x1a object/stm32_startup.o
+ *fill*         0x08003cc2        0x2 
+ .rodata        0x08003cc4       0xcc object/sys_init.o
+ .rodata        0x08003d90       0x3b object/unistd.o
+ *fill*         0x08003dcb        0x1 
+ .rodata        0x08003dcc       0x8a object/kunistd.o
+ *fill*         0x08003e56        0x2 
+ .rodata        0x08003e58       0xb3 object/syscall.o
+ *fill*         0x08003f0b        0x1 
+ .rodata        0x08003f0c      0x46d object/test_interrupt.o
+ *fill*         0x08004379        0x3 
+ .rodata        0x0800437c        0xf object/dev_table.o
+ *fill*         0x0800438b        0x1 
+ .rodata        0x0800438c       0xe6 object/schedule.o
+ *fill*         0x08004472        0x2 
+ .rodata        0x08004474      0x2fd object/kmem.o
+ *fill*         0x08004771        0x3 
+ .rodata        0x08004774      0x3d2 object/app.o
+                0x08004b48                        . = ALIGN (0x4)
+ *fill*         0x08004b46        0x2 
+                0x08004b48                        _etext = .
+                0x08004b48                        _la_data = LOADADDR (.data)
 
-.glue_7         0x080047d4        0x0
- .glue_7        0x080047d4        0x0 linker stubs
+.glue_7         0x08004b48        0x0
+ .glue_7        0x08004b48        0x0 linker stubs
 
-.glue_7t        0x080047d4        0x0
- .glue_7t       0x080047d4        0x0 linker stubs
+.glue_7t        0x08004b48        0x0
+ .glue_7t       0x08004b48        0x0 linker stubs
 
-.vfp11_veneer   0x080047d4        0x0
- .vfp11_veneer  0x080047d4        0x0 linker stubs
+.vfp11_veneer   0x08004b48        0x0
+ .vfp11_veneer  0x08004b48        0x0 linker stubs
 
-.v4_bx          0x080047d4        0x0
- .v4_bx         0x080047d4        0x0 linker stubs
+.v4_bx          0x08004b48        0x0
+ .v4_bx         0x08004b48        0x0 linker stubs
 
-.iplt           0x080047d4        0x0
- .iplt          0x080047d4        0x0 object/cm4.o
+.iplt           0x08004b48        0x0
+ .iplt          0x08004b48        0x0 object/cm4.o
 
-.rel.dyn        0x080047d4        0x0
- .rel.iplt      0x080047d4        0x0 object/cm4.o
+.rel.dyn        0x08004b48        0x0
+ .rel.iplt      0x08004b48        0x0 object/cm4.o
 
-.data           0x20000000     0x80b0 load address 0x080047d4
+.data           0x20000000     0x80b0 load address 0x08004b48
                 0x20000000                        _sdata = .
  *(.data)
  .data          0x20000000        0x0 object/kmath.o
@@ -365,10 +369,10 @@ LOAD object/app.o
                 0x200080b0                        . = ALIGN (0x4)
                 0x200080b0                        _edata = .
 
-.igot.plt       0x200080b0        0x0 load address 0x0800c884
+.igot.plt       0x200080b0        0x0 load address 0x0800cbf8
  .igot.plt      0x200080b0        0x0 object/cm4.o
 
-.bss            0x200080b0      0xe68 load address 0x0800c884
+.bss            0x200080b0      0xe68 load address 0x0800cbf8
                 0x200080b0                        _sbss = .
  *(.bss)
  .bss           0x200080b0        0x0 object/kmath.o
