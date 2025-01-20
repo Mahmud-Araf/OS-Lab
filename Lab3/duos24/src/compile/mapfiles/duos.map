@@ -37,7 +37,7 @@ LOAD object/ustdio.o
 LOAD object/kmem.o
 LOAD object/app.o
 
-.text           0x08000000     0x49a8
+.text           0x08000000     0x4a74
                 0x08000000                        _stext = .
  *(.isr_vector)
  .isr_vector    0x08000000      0x1c4 object/stm32_startup.o
@@ -280,58 +280,58 @@ LOAD object/app.o
  .text          0x08003224      0x354 object/ustdio.o
                 0x08003224                uprintf
                 0x08003498                uscanf
- .text          0x08003578      0x2f8 object/kmem.o
+ .text          0x08003578      0x350 object/kmem.o
                 0x08003578                __init_memory_manager
-                0x0800360c                __kmem_free
-                0x080036f8                __kmem_malloc
- .text          0x08003870      0x1dc object/app.o
-                0x08003870                test_io_functions
-                0x080038c4                test_memory_management
-                0x08003980                test_process_management
-                0x08003a0c                umain
+                0x08003628                __kmem_free
+                0x0800373c                __kmem_malloc
+ .text          0x080038c8      0x1dc object/app.o
+                0x080038c8                test_io_functions
+                0x0800391c                test_memory_management
+                0x080039d8                test_process_management
+                0x08003a64                umain
  *(.rodata)
- .rodata        0x08003a4c      0x148 object/kmain.o
- .rodata        0x08003b94       0x1a object/stm32_startup.o
- *fill*         0x08003bae        0x2 
- .rodata        0x08003bb0       0xcc object/sys_init.o
- .rodata        0x08003c7c       0x3b object/unistd.o
- *fill*         0x08003cb7        0x1 
- .rodata        0x08003cb8       0x30 object/kunistd.o
- .rodata        0x08003ce8       0xb3 object/syscall.o
- *fill*         0x08003d9b        0x1 
- .rodata        0x08003d9c      0x46d object/test_interrupt.o
- *fill*         0x08004209        0x3 
- .rodata        0x0800420c        0xf object/dev_table.o
- *fill*         0x0800421b        0x1 
- .rodata        0x0800421c       0xe6 object/schedule.o
- *fill*         0x08004302        0x2 
- .rodata        0x08004304      0x2fd object/kmem.o
- *fill*         0x08004601        0x3 
- .rodata        0x08004604      0x3a2 object/app.o
-                0x080049a8                        . = ALIGN (0x4)
- *fill*         0x080049a6        0x2 
-                0x080049a8                        _etext = .
-                0x080049a8                        _la_data = LOADADDR (.data)
+ .rodata        0x08003aa4      0x148 object/kmain.o
+ .rodata        0x08003bec       0x1a object/stm32_startup.o
+ *fill*         0x08003c06        0x2 
+ .rodata        0x08003c08       0xcc object/sys_init.o
+ .rodata        0x08003cd4       0x3b object/unistd.o
+ *fill*         0x08003d0f        0x1 
+ .rodata        0x08003d10       0x30 object/kunistd.o
+ .rodata        0x08003d40       0xb3 object/syscall.o
+ *fill*         0x08003df3        0x1 
+ .rodata        0x08003df4      0x46d object/test_interrupt.o
+ *fill*         0x08004261        0x3 
+ .rodata        0x08004264        0xf object/dev_table.o
+ *fill*         0x08004273        0x1 
+ .rodata        0x08004274       0xe6 object/schedule.o
+ *fill*         0x0800435a        0x2 
+ .rodata        0x0800435c      0x371 object/kmem.o
+ *fill*         0x080046cd        0x3 
+ .rodata        0x080046d0      0x3a2 object/app.o
+                0x08004a74                        . = ALIGN (0x4)
+ *fill*         0x08004a72        0x2 
+                0x08004a74                        _etext = .
+                0x08004a74                        _la_data = LOADADDR (.data)
 
-.glue_7         0x080049a8        0x0
- .glue_7        0x080049a8        0x0 linker stubs
+.glue_7         0x08004a74        0x0
+ .glue_7        0x08004a74        0x0 linker stubs
 
-.glue_7t        0x080049a8        0x0
- .glue_7t       0x080049a8        0x0 linker stubs
+.glue_7t        0x08004a74        0x0
+ .glue_7t       0x08004a74        0x0 linker stubs
 
-.vfp11_veneer   0x080049a8        0x0
- .vfp11_veneer  0x080049a8        0x0 linker stubs
+.vfp11_veneer   0x08004a74        0x0
+ .vfp11_veneer  0x08004a74        0x0 linker stubs
 
-.v4_bx          0x080049a8        0x0
- .v4_bx         0x080049a8        0x0 linker stubs
+.v4_bx          0x08004a74        0x0
+ .v4_bx         0x08004a74        0x0 linker stubs
 
-.iplt           0x080049a8        0x0
- .iplt          0x080049a8        0x0 object/cm4.o
+.iplt           0x08004a74        0x0
+ .iplt          0x08004a74        0x0 object/cm4.o
 
-.rel.dyn        0x080049a8        0x0
- .rel.iplt      0x080049a8        0x0 object/cm4.o
+.rel.dyn        0x08004a74        0x0
+ .rel.iplt      0x08004a74        0x0 object/cm4.o
 
-.data           0x20000000     0x80b0 load address 0x080049a8
+.data           0x20000000       0xac load address 0x08004a74
                 0x20000000                        _sdata = .
  *(.data)
  .data          0x20000000        0x0 object/kmath.o
@@ -361,59 +361,64 @@ LOAD object/app.o
  .data          0x200000a8        0x4 object/schedule.o
                 0x200000a8                TASK_ID
  .data          0x200000ac        0x0 object/ustdio.o
- *fill*         0x200000ac        0x4 
- .data          0x200000b0     0x8000 object/kmem.o
- .data          0x200080b0        0x0 object/app.o
-                0x200080b0                        . = ALIGN (0x4)
-                0x200080b0                        _edata = .
+ .data          0x200000ac        0x0 object/kmem.o
+ .data          0x200000ac        0x0 object/app.o
+                0x200000ac                        . = ALIGN (0x4)
+                0x200000ac                        _edata = .
 
-.igot.plt       0x200080b0        0x0 load address 0x0800ca58
- .igot.plt      0x200080b0        0x0 object/cm4.o
+.igot.plt       0x200000ac        0x0 load address 0x08004b20
+ .igot.plt      0x200000ac        0x0 object/cm4.o
 
-.bss            0x200080b0      0xf68 load address 0x0800ca58
-                0x200080b0                        _sbss = .
+.heap           0x200000ac     0x8000 load address 0x08004b20
+                0x200000ac                        _sheap = .
+                0x200080ac                        . = (_sheap + 0x8000)
+ *fill*         0x200000ac     0x8000 
+                0x200080ac                        _eheap = .
+
+.bss            0x200080ac      0xf68 load address 0x08004b20
+                0x200080ac                        _sbss = .
  *(.bss)
- .bss           0x200080b0        0x0 object/kmath.o
- .bss           0x200080b0        0x0 object/kfloat.o
- .bss           0x200080b0        0x5 object/cm4.o
-                0x200080b4                __PendSV_Flag
- *fill*         0x200080b5        0x3 
- .bss           0x200080b8       0x32 object/kstring.o
- *fill*         0x200080ea        0x2 
- .bss           0x200080ec      0x250 object/kmain.o
-                0x200080ec                __task
-                0x2000831c                __sleep
-                0x20008338                GLOBAL_COUNT
- .bss           0x2000833c        0xc object/stm32_startup.o
-                0x2000833c                _bss_size
-                0x20008340                _text_size
-                0x20008344                _data_size
- .bss           0x20008348        0x0 object/clock.o
- .bss           0x20008348        0x0 object/usart.o
- .bss           0x20008348        0x0 object/gpio.o
- .bss           0x20008348        0x0 object/timer.o
- .bss           0x20008348        0x0 object/kstdio.o
- .bss           0x20008348        0x0 object/sys_init.o
- .bss           0x20008348        0x0 object/unistd.o
- .bss           0x20008348        0x0 object/times.o
- .bss           0x20008348       0x1c object/kunistd.o
- .bss           0x20008364        0x0 object/ktimes.o
- .bss           0x20008364        0x0 object/syscall.o
- .bss           0x20008364       0x14 object/seven_segment.o
- .bss           0x20008378        0x0 object/sys.o
- .bss           0x20008378        0x0 object/test_interrupt.o
- .bss           0x20008378        0x0 object/nvic.o
- .bss           0x20008378      0xb04 object/dev_table.o
-                0x20008378                device_list
-                0x20008e78                device_count
- .bss           0x20008e7c       0x90 object/schedule.o
-                0x20008e7c                queue
-                0x20008f04                current_task
-                0x20008f08                sleep_task
- .bss           0x20008f0c      0x100 object/ustdio.o
- .bss           0x2000900c        0xc object/kmem.o
- .bss           0x20009018        0x0 object/app.o
-                0x20009018                        _ebss = .
+ .bss           0x200080ac        0x0 object/kmath.o
+ .bss           0x200080ac        0x0 object/kfloat.o
+ .bss           0x200080ac        0x5 object/cm4.o
+                0x200080b0                __PendSV_Flag
+ *fill*         0x200080b1        0x3 
+ .bss           0x200080b4       0x32 object/kstring.o
+ *fill*         0x200080e6        0x2 
+ .bss           0x200080e8      0x250 object/kmain.o
+                0x200080e8                __task
+                0x20008318                __sleep
+                0x20008334                GLOBAL_COUNT
+ .bss           0x20008338        0xc object/stm32_startup.o
+                0x20008338                _bss_size
+                0x2000833c                _text_size
+                0x20008340                _data_size
+ .bss           0x20008344        0x0 object/clock.o
+ .bss           0x20008344        0x0 object/usart.o
+ .bss           0x20008344        0x0 object/gpio.o
+ .bss           0x20008344        0x0 object/timer.o
+ .bss           0x20008344        0x0 object/kstdio.o
+ .bss           0x20008344        0x0 object/sys_init.o
+ .bss           0x20008344        0x0 object/unistd.o
+ .bss           0x20008344        0x0 object/times.o
+ .bss           0x20008344       0x1c object/kunistd.o
+ .bss           0x20008360        0x0 object/ktimes.o
+ .bss           0x20008360        0x0 object/syscall.o
+ .bss           0x20008360       0x14 object/seven_segment.o
+ .bss           0x20008374        0x0 object/sys.o
+ .bss           0x20008374        0x0 object/test_interrupt.o
+ .bss           0x20008374        0x0 object/nvic.o
+ .bss           0x20008374      0xb04 object/dev_table.o
+                0x20008374                device_list
+                0x20008e74                device_count
+ .bss           0x20008e78       0x90 object/schedule.o
+                0x20008e78                queue
+                0x20008f00                current_task
+                0x20008f04                sleep_task
+ .bss           0x20008f08      0x100 object/ustdio.o
+ .bss           0x20009008        0xc object/kmem.o
+ .bss           0x20009014        0x0 object/app.o
+                0x20009014                        _ebss = .
 OUTPUT(target/duos elf32-littlearm)
 LOAD linker stubs
 

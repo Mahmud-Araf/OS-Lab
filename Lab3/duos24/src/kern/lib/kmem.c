@@ -6,16 +6,20 @@
 // Global memory table
 static mem_table_t mem_table;
 
-// Memory pool for allocations (after kernel and task stacks)
-// Align to 8-byte boundary and place in RAM
-static uint8_t memory_pool[SIZE_SRAM/4] __attribute__((aligned(8), section(".data")));
+// External symbols from linker script
+extern uint8_t _sheap;    // Start of heap
+extern uint8_t _eheap;    // End of heap
 
 void __init_memory_manager(void) {
-    // Initialize first block to cover entire memory pool
-    mem_block_t *first_block = (mem_block_t *)memory_pool;
+    // Initialize first block to cover entire heap section
+    mem_block_t *first_block = (mem_block_t *)&_sheap;
     
-    kprintf("Memory manager: pool starts at 0x%x\n", (unsigned int)memory_pool);
+    kprintf("Memory manager: heap starts at 0x%x\n", (unsigned int)&_sheap);
+    kprintf("Memory manager: heap ends at 0x%x\n", (unsigned int)&_eheap);
     kprintf("Memory manager: first block at 0x%x\n", (unsigned int)first_block);
+    
+    // Calculate total heap size
+    uint32_t total_heap_size = (uint32_t)&_eheap - (uint32_t)&_sheap;
     
     // Calculate the data area address (after the block header)
     void *data_start = (void *)((uint8_t *)first_block + sizeof(mem_block_t));
@@ -23,23 +27,29 @@ void __init_memory_manager(void) {
     
     // Initialize the first block
     first_block->addr = data_start;
-    first_block->size = sizeof(memory_pool) - sizeof(mem_block_t);
+    first_block->size = total_heap_size - sizeof(mem_block_t);
     first_block->pid = 0;
     first_block->is_free = 1;
     first_block->next = NULL;
 
     // Initialize memory table
     mem_table.head = first_block;
-    mem_table.total_size = sizeof(memory_pool);
+    mem_table.total_size = total_heap_size;
     mem_table.free_size = first_block->size;
     
-    kprintf("Memory manager: total size %d bytes, usable size %d bytes\n", 
+    kprintf("Memory manager: total heap size %d bytes, usable size %d bytes\n", 
             mem_table.total_size, mem_table.free_size);
 }
 
 int __kmem_free(void *ptr) {
     if (!ptr) {
         kprintf("Free: NULL pointer\n");
+        return -1;
+    }
+
+    // Validate pointer is within heap bounds
+    if ((uint8_t *)ptr < &_sheap || (uint8_t *)ptr >= &_eheap) {
+        kprintf("Free: pointer outside heap bounds\n");
         return -1;
     }
 
@@ -101,8 +111,15 @@ void *__kmem_malloc(uint32_t size) {
         if (block->is_free && block->size >= size) {
             // Found a suitable block
             if (block->size >= size + sizeof(mem_block_t) + 8) {
-                // Calculate the start of the new block - FIXED calculation
-                mem_block_t *new_block = (mem_block_t *)((uint8_t *)block + sizeof(mem_block_t) + size);
+                // Split the block if there's enough space for a new block
+                mem_block_t *new_block = (mem_block_t *)((uint8_t *)block->addr + size);
+                
+                // Verify new block is within heap bounds
+                if ((uint8_t *)new_block >= &_eheap) {
+                    kprintf("Malloc: split would exceed heap bounds\n");
+                    return NULL;
+                }
+                
                 kprintf("Malloc: splitting block, new block at 0x%x\n", 
                         (unsigned int)new_block);
                 
@@ -129,10 +146,10 @@ void *__kmem_malloc(uint32_t size) {
             kprintf("Malloc: allocated block at 0x%x, data at 0x%x, size %d\n", 
                     (unsigned int)block, (unsigned int)block->addr, block->size);
             
-            // Verify the address is within our memory pool
-            if ((uint8_t *)block->addr < memory_pool || 
-                (uint8_t *)block->addr >= memory_pool + sizeof(memory_pool)) {
-                kprintf("Malloc: WARNING - address outside memory pool!\n");
+            // Verify the address is within heap bounds
+            if ((uint8_t *)block->addr < &_sheap || 
+                (uint8_t *)block->addr >= &_eheap) {
+                kprintf("Malloc: WARNING - address outside heap bounds!\n");
                 return NULL;
             }
             
