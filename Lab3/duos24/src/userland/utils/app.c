@@ -2,31 +2,45 @@
 #include <stddef.h>
 #include <times.h>
 
+void test_io_functions() {
+    uprintf("\n=== Testing IO Functions ===\n");
+    
+    // Test uprintf
+    uprintf("[INFO] Testing uprintf:\n");
+    uprintf("[INFO] Hello DUOS!\n");
+    
+    // Test uscanf
+    int num;
+    uprintf("[INFO] Please enter a number: ");
+    uscanf("%d", &num);
+    uprintf("[INFO] You entered: %d\n", num);
+}
+
 void test_memory_management() {
     uprintf("\n=== Testing Memory Management ===\n");
     
     // Test allocation
-    uprintf("Testing umalloc:\n");
+    uprintf("[INFO] Testing umalloc:\n");
     char *str = (char *)umalloc(20);
     if (str == NULL) {
-        uprintf("❌ umalloc: Failed to allocate memory!\n");
+        uprintf("[FAIL] umalloc: Failed to allocate memory!\n");
         return;
     }
-    uprintf("✓ umalloc: Successfully allocated memory at address: 0x%x\n", (unsigned int)str);
+    uprintf("[OK] umalloc: Successfully allocated memory at address: 0x%x\n", (unsigned int)str);
     
     // Write to allocated memory
     for (int i = 0; i < 19; i++) {
         str[i] = 'A' + (i % 26);
     }
     str[19] = '\0';
-    uprintf("✓ Memory write test: %s\n", str);
+    uprintf("[OK] Memory write test: %s\n", str);
     
     // Test freeing memory
     int result = ufree(str);
     if (result == 0) {
-        uprintf("✓ ufree: Successfully freed memory\n");
+        uprintf("[OK] ufree: Successfully freed memory\n");
     } else {
-        uprintf("❌ ufree: Failed to free memory! Error code: %d\n", result);
+        uprintf("[FAIL] ufree: Failed to free memory! Error code: %d\n", result);
     }
 }
 
@@ -35,65 +49,62 @@ void test_process_management() {
     
     // Test getpid
     uint32_t pid = ugetpid();
-    uprintf("✓ ugetpid: Current process ID: %d\n", pid);
+    uprintf("[OK] ugetpid: Current process ID: %d\n", pid);
     
-    // Test yield
-    uprintf("Testing uyield (will yield to other processes if any)...\n");
-    uyield();
-    uprintf("✓ uyield: Successfully returned from yield\n");
+    // Test fork
+    uprintf("[INFO] Testing fork:\n");
+    int child_pid = ufork();
+    
+    if (child_pid == 0) {
+        // Child process
+        uint32_t my_pid = ugetpid();
+        uprintf("[INFO] Child process running with PID: %d\n", my_pid);
+        uprintf("[OK] Child process successfully created\n");
+        utask_exit();
+    } 
+    else if (child_pid > 0) {
+        // Parent process
+        uprintf("[INFO] Parent created child with PID: %d\n", child_pid);
+        uprintf("[OK] Fork test passed\n");
+    } 
+    else {
+        uprintf("[FAIL] Fork failed with error code: %d\n", child_pid);
+    }
+    
+    // Test execv
+    uprintf("\n[INFO] Testing execv:\n");
+    char *argv[] = {"test_program", NULL};
+    int ret = uexecv((char*)&test_process_management, argv);
+    if (ret < 0) {
+        uprintf("[FAIL] Execv failed with error code: %d\n", ret);
+    } else {
+        uprintf("[OK] Execv test passed\n");
+    }
 }
 
-void test_time_functions() {
-    uprintf("\n=== Testing Time Functions ===\n");
-    
-    uint32_t time1 = uget_time();
-    // Do some work
-    for(volatile int i = 0; i < 1000; i++);
-    uint32_t time2 = uget_time();
-    
-    uprintf("✓ uget_time: Time readings - First: %u, Second: %u, Diff: %u\n", 
-            time1, time2, time2 - time1);
-}
-
-void test_file_operations() {
-    uprintf("\n=== Testing File Operations ===\n");
-    
-    // Test file open
-    uint32_t file_handle;
-    ufopen("test.txt", 1, &file_handle); // 1 for write access
-    uprintf("✓ ufopen: Attempted to open file with handle: %u\n", file_handle);
-    
-    // Test file write
-    char test_data[] = "Hello, DUOS!";
-    uwrite(file_handle, test_data);
-    uprintf("✓ uwrite: Attempted to write data\n");
-    
-    // Test file read
-    char *read_buffer;
-    uread(file_handle, &read_buffer, sizeof(test_data));
-    uprintf("✓ uread: Attempted to read data\n");
-    
-    // Test file close
-    ufclose(&file_handle);
-    uprintf("✓ ufclose: Attempted to close file\n");
+void test_basic_write() {
+    // Test direct writing first
+    uwrite(1, "Basic write test\n");
 }
 
 int umain() {
-    uprintf("\n🔍 Starting DUOS User Function Test Suite 🔍\n");
-    uprintf("==========================================\n");
+    // Start with basic write test
+    test_basic_write();
     
+    uprintf("\n***** Starting DUOS User Function Test Suite *****\n");
+    uprintf("================================================\n");
+    
+    // 1. Test IO Functions (printf, scanf)
+    test_io_functions();
+    
+    // 2. Test Memory Management (malloc, free)
     test_memory_management();
+    
+    // 3. Test Process Management (fork, exec, etc)
     test_process_management();
-    test_time_functions();
-    test_file_operations();
     
-    uprintf("\n==========================================\n");
-    uprintf("✨ Test Suite Completed ✨\n");
-    
-    // Note: We don't test these functions as they would terminate our program:
-    // - utask_exit()
-    // - ureboot()
-    // - uexecv() - requires proper executable path and arguments
+    uprintf("\n================================================\n");
+    uprintf("***** Test Suite Completed *****\n");
     
     return 0;
 }

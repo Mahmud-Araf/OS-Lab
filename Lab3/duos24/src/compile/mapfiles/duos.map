@@ -37,7 +37,7 @@ LOAD object/ustdio.o
 LOAD object/kmem.o
 LOAD object/app.o
 
-.text           0x08000000     0x4b48
+.text           0x08000000     0x4b98
                 0x08000000                        _stext = .
  *(.isr_vector)
  .isr_vector    0x08000000      0x1c4 object/stm32_startup.o
@@ -197,7 +197,7 @@ LOAD object/app.o
                 0x0800192c                kscanf
  .text          0x08001ac8       0x88 object/sys_init.o
                 0x08001ac8                __sys_init
- .text          0x08001b50      0x1d0 object/unistd.o
+ .text          0x08001b50      0x1f0 object/unistd.o
                 0x08001b50                ufopen
                 0x08001b80                ufclose
                 0x08001ba2                ureboot
@@ -210,85 +210,87 @@ LOAD object/app.o
                 0x08001c8c                umalloc
                 0x08001cc0                ufree
                 0x08001cf0                uexecv
- .text          0x08001d20       0x26 object/times.o
-                0x08001d20                uget_time
- *fill*         0x08001d46        0x2 
- .text          0x08001d48      0x428 object/kunistd.o
-                0x08001d48                __sys_start_task
-                0x08001d72                __sys_open
-                0x08001dfc                __sys_close
-                0x08001edc                __sys_reboot
-                0x08001ef8                __sys_read
-                0x08001f94                __sys_write
-                0x08001fc4                __sys_getpid
-                0x08001fe2                __sys_free
-                0x08002006                __sys_malloc
-                0x08002038                __sys_fork
-                0x08002104                __sys_execv
- .text          0x08002170       0x1a object/ktimes.o
-                0x08002170                __sys_get_time
- *fill*         0x0800218a        0x2 
- .text          0x0800218c      0x340 object/syscall.o
-                0x0800218c                syscall
- .text          0x080024cc      0x120 object/seven_segment.o
-                0x080024cc                seven_segment_init
-                0x08002530                display_digit
-                0x08002590                module_exit
- .text          0x080025ec       0xe4 object/sys.o
-                0x080025ec                EXTI_GPIO_Config
-                0x08002622                EXTI0_Init
-                0x08002678                EXTI1_Init
- .text          0x080026d0      0x35c object/test_interrupt.o
-                0x080026d0                blinky_test_code
-                0x0800273c                test_set_get_priority
-                0x0800278c                test_masking
-                0x08002864                test_hardfault
-                0x08002898                test_sys_tick
-                0x0800298c                test_all
- .text          0x08002a2c      0x398 object/nvic.o
-                0x08002a2c                __NVIC_SetPriority
-                0x08002a80                __NVIC_GetPriority
-                0x08002ad0                __NVIC_EnableIRQn
-                0x08002b2c                __NVIC_DisableIRQn
-                0x08002b8c                __disable_irq
-                0x08002ba2                __enable_irq
-                0x08002bb8                __set_BASEPRI
-                0x08002bde                __unset_BASEPRI
-                0x08002bf4                __set_PRIMASK
-                0x08002c12                __get_PRIMASK
-                0x08002c2e                __enable_fault_irq
-                0x08002c44                __disable_fault_irq
-                0x08002c5a                __set_FAULTMASK
-                0x08002c70                __clear_FAULTMASK
-                0x08002c86                __get_FAULTMASK
-                0x08002ca2                __clear_pending_IRQn
-                0x08002d04                __get_pending_IRQn
-                0x08002d64                __NVIC_GetActive
- .text          0x08002dc4      0x138 object/dev_table.o
-                0x08002dc4                __init_dev_table
- .text          0x08002efc      0x3cc object/schedule.o
-                0x08002efc                init_queue
-                0x08002f28                queue_add
-                0x08002f80                pop
-                0x08002fdc                __schedule
-                0x08003020                __create_task
-                0x0800310c                start_exec
-                0x0800316c                __set_sleep
-                0x0800318c                PendSV_Handler
-                0x080031d0                print_entire_queue
-                0x08003274                print_task_info
-                0x080032a8                __sys_yield
- .text          0x080032c8      0x384 object/ustdio.o
-                0x080032c8                uprintf
- .text          0x0800364c      0x2f8 object/kmem.o
-                0x0800364c                __init_memory_manager
-                0x080036e0                __kmem_free
-                0x080037cc                __kmem_malloc
- .text          0x08003944      0x21c object/app.o
-                0x08003944                test_memory_management
-                0x08003a00                test_process_management
-                0x08003a44                test_time_functions
-                0x08003a90                test_file_operations
+                0x08001d1e                ufork
+ .text          0x08001d40       0x26 object/times.o
+                0x08001d40                uget_time
+ *fill*         0x08001d66        0x2 
+ .text          0x08001d68      0x41c object/kunistd.o
+                0x08001d68                __sys_start_task
+                0x08001d92                __sys_open
+                0x08001e1c                __sys_close
+                0x08001efc                __sys_reboot
+                0x08001f18                __sys_read
+                0x08001fb4                __sys_write
+                0x08001fe4                __sys_getpid
+                0x08002002                __sys_free
+                0x08002026                __sys_malloc
+                0x08002058                __sys_fork
+                0x08002118                __sys_execv
+ .text          0x08002184       0x1a object/ktimes.o
+                0x08002184                __sys_get_time
+ *fill*         0x0800219e        0x2 
+ .text          0x080021a0      0x340 object/syscall.o
+                0x080021a0                syscall
+ .text          0x080024e0      0x120 object/seven_segment.o
+                0x080024e0                seven_segment_init
+                0x08002544                display_digit
+                0x080025a4                module_exit
+ .text          0x08002600       0xe4 object/sys.o
+                0x08002600                EXTI_GPIO_Config
+                0x08002636                EXTI0_Init
+                0x0800268c                EXTI1_Init
+ .text          0x080026e4      0x35c object/test_interrupt.o
+                0x080026e4                blinky_test_code
+                0x08002750                test_set_get_priority
+                0x080027a0                test_masking
+                0x08002878                test_hardfault
+                0x080028ac                test_sys_tick
+                0x080029a0                test_all
+ .text          0x08002a40      0x398 object/nvic.o
+                0x08002a40                __NVIC_SetPriority
+                0x08002a94                __NVIC_GetPriority
+                0x08002ae4                __NVIC_EnableIRQn
+                0x08002b40                __NVIC_DisableIRQn
+                0x08002ba0                __disable_irq
+                0x08002bb6                __enable_irq
+                0x08002bcc                __set_BASEPRI
+                0x08002bf2                __unset_BASEPRI
+                0x08002c08                __set_PRIMASK
+                0x08002c26                __get_PRIMASK
+                0x08002c42                __enable_fault_irq
+                0x08002c58                __disable_fault_irq
+                0x08002c6e                __set_FAULTMASK
+                0x08002c84                __clear_FAULTMASK
+                0x08002c9a                __get_FAULTMASK
+                0x08002cb6                __clear_pending_IRQn
+                0x08002d18                __get_pending_IRQn
+                0x08002d78                __NVIC_GetActive
+ .text          0x08002dd8      0x138 object/dev_table.o
+                0x08002dd8                __init_dev_table
+ .text          0x08002f10      0x3cc object/schedule.o
+                0x08002f10                init_queue
+                0x08002f3c                queue_add
+                0x08002f94                pop
+                0x08002ff0                __schedule
+                0x08003034                __create_task
+                0x08003120                start_exec
+                0x08003180                __set_sleep
+                0x080031a0                PendSV_Handler
+                0x080031e4                print_entire_queue
+                0x08003288                print_task_info
+                0x080032bc                __sys_yield
+ .text          0x080032dc      0x354 object/ustdio.o
+                0x080032dc                uprintf
+                0x08003550                uscanf
+ .text          0x08003630      0x2f8 object/kmem.o
+                0x08003630                __init_memory_manager
+                0x080036c4                __kmem_free
+                0x080037b0                __kmem_malloc
+ .text          0x08003928      0x238 object/app.o
+                0x08003928                test_io_functions
+                0x0800397c                test_memory_management
+                0x08003a38                test_process_management
+                0x08003b08                test_basic_write
                 0x08003b1c                umain
  *(.rodata)
  .rodata        0x08003b60      0x148 object/kmain.o
@@ -309,31 +311,31 @@ LOAD object/app.o
  *fill*         0x08004472        0x2 
  .rodata        0x08004474      0x2fd object/kmem.o
  *fill*         0x08004771        0x3 
- .rodata        0x08004774      0x3d2 object/app.o
-                0x08004b48                        . = ALIGN (0x4)
- *fill*         0x08004b46        0x2 
-                0x08004b48                        _etext = .
-                0x08004b48                        _la_data = LOADADDR (.data)
+ .rodata        0x08004774      0x422 object/app.o
+                0x08004b98                        . = ALIGN (0x4)
+ *fill*         0x08004b96        0x2 
+                0x08004b98                        _etext = .
+                0x08004b98                        _la_data = LOADADDR (.data)
 
-.glue_7         0x08004b48        0x0
- .glue_7        0x08004b48        0x0 linker stubs
+.glue_7         0x08004b98        0x0
+ .glue_7        0x08004b98        0x0 linker stubs
 
-.glue_7t        0x08004b48        0x0
- .glue_7t       0x08004b48        0x0 linker stubs
+.glue_7t        0x08004b98        0x0
+ .glue_7t       0x08004b98        0x0 linker stubs
 
-.vfp11_veneer   0x08004b48        0x0
- .vfp11_veneer  0x08004b48        0x0 linker stubs
+.vfp11_veneer   0x08004b98        0x0
+ .vfp11_veneer  0x08004b98        0x0 linker stubs
 
-.v4_bx          0x08004b48        0x0
- .v4_bx         0x08004b48        0x0 linker stubs
+.v4_bx          0x08004b98        0x0
+ .v4_bx         0x08004b98        0x0 linker stubs
 
-.iplt           0x08004b48        0x0
- .iplt          0x08004b48        0x0 object/cm4.o
+.iplt           0x08004b98        0x0
+ .iplt          0x08004b98        0x0 object/cm4.o
 
-.rel.dyn        0x08004b48        0x0
- .rel.iplt      0x08004b48        0x0 object/cm4.o
+.rel.dyn        0x08004b98        0x0
+ .rel.iplt      0x08004b98        0x0 object/cm4.o
 
-.data           0x20000000     0x80b0 load address 0x08004b48
+.data           0x20000000     0x80b0 load address 0x08004b98
                 0x20000000                        _sdata = .
  *(.data)
  .data          0x20000000        0x0 object/kmath.o
@@ -369,10 +371,10 @@ LOAD object/app.o
                 0x200080b0                        . = ALIGN (0x4)
                 0x200080b0                        _edata = .
 
-.igot.plt       0x200080b0        0x0 load address 0x0800cbf8
+.igot.plt       0x200080b0        0x0 load address 0x0800cc48
  .igot.plt      0x200080b0        0x0 object/cm4.o
 
-.bss            0x200080b0      0xe68 load address 0x0800cbf8
+.bss            0x200080b0      0xf68 load address 0x0800cc48
                 0x200080b0                        _sbss = .
  *(.bss)
  .bss           0x200080b0        0x0 object/kmath.o
@@ -412,10 +414,10 @@ LOAD object/app.o
                 0x20008e7c                queue
                 0x20008f04                current_task
                 0x20008f08                sleep_task
- .bss           0x20008f0c        0x0 object/ustdio.o
- .bss           0x20008f0c        0xc object/kmem.o
- .bss           0x20008f18        0x0 object/app.o
-                0x20008f18                        _ebss = .
+ .bss           0x20008f0c      0x100 object/ustdio.o
+ .bss           0x2000900c        0xc object/kmem.o
+ .bss           0x20009018        0x0 object/app.o
+                0x20009018                        _ebss = .
 OUTPUT(target/duos elf32-littlearm)
 LOAD linker stubs
 

@@ -153,38 +153,39 @@ int __sys_fork(TCB_TypeDef *parent_task)
     // 1. Create new TCB for child process
     static TCB_TypeDef child_tcb;
     
-    // 2. Calculate new stack address for child (allocate after parent's stack)
-    uint32_t *parent_stack_bottom = (uint32_t *)((uint32_t)parent_task->psp & ~(TASK_STACK_SIZE - 1));
-    uint32_t *child_stack_start = parent_stack_bottom - TASK_STACK_SIZE;
+    // 2. Calculate stack addresses correctly
+    uint32_t parent_stack_top = (uint32_t)parent_task->psp;
+    uint32_t parent_stack_bottom = (parent_stack_top + TASK_STACK_SIZE) & ~7;  // Align to 8 bytes
+    uint32_t child_stack_bottom = parent_stack_bottom + TASK_STACK_SIZE;  // Place child stack after parent
+    uint32_t child_stack_top = child_stack_bottom - (parent_stack_bottom - parent_stack_top);
     
     // 3. Copy parent's TCB to child
     child_tcb.magic_number = parent_task->magic_number;
-    child_tcb.task_id = TASK_ID++; // Get new task ID
+    child_tcb.task_id = TASK_ID++;  // Get new task ID
     child_tcb.status = READY;
     child_tcb.execution_time = 0;
     child_tcb.waiting_time = 0;
     child_tcb.digital_sinature = parent_task->digital_sinature;
+    child_tcb.psp = (uint32_t *)child_stack_top;  // Set child's stack pointer
     
-    // 4. Calculate child's stack pointer offset
-    uint32_t stack_offset = (uint32_t)child_stack_start - (uint32_t)parent_stack_bottom;
-    child_tcb.psp = (uint32_t *)((uint32_t)parent_task->psp + stack_offset);
+    // 4. Copy parent's stack to child's stack
+    uint32_t stack_size = parent_stack_bottom - parent_stack_top;
+    uint8_t *src = (uint8_t *)parent_stack_top;
+    uint8_t *dst = (uint8_t *)child_stack_top;
     
-    // 5. Copy parent's stack to child's stack
-    uint32_t stack_size = (uint32_t)parent_stack_bottom + TASK_STACK_SIZE - (uint32_t)parent_task->psp;
-    for (uint32_t i = 0; i < stack_size / sizeof(uint32_t); i++) {
-        child_stack_start[i] = parent_task->psp[i];
+    for (uint32_t i = 0; i < stack_size; i++) {
+        dst[i] = src[i];
     }
+    
+    // 5. Modify child's saved context to return 0
+    uint32_t *child_context = (uint32_t *)child_stack_top;
+    child_context[0] = 0;  // R0 will be 0 when child starts
     
     // 6. Add child to ready queue
     queue_add(&child_tcb);
     
-    // 7. Set return values:
-    // - Parent gets child's PID
-    // - Child gets 0 (will be set when its context is restored)
-    uint32_t *child_stack = child_tcb.psp;
-    child_stack[6] = 0; // R0 will be 0 when child starts
-    
-    return child_tcb.task_id; // Return child's PID to parent
+    // 7. Return child's PID to parent
+    return child_tcb.task_id;
 }
 
 int __sys_execv(const char *path, char *const argv[]) {

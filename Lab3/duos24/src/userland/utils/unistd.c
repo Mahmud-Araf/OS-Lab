@@ -197,3 +197,17 @@ int uexecv(const char *path, char *const argv[]) {
     // If we get here, execv failed (should not return on success)
     return result;
 }
+
+int ufork(void) {
+    int result;
+    __asm volatile (
+        "PUSH {r4-r11, ip, lr}\n"
+        "svc %[v]\n"
+        "POP {r4-r11, ip, lr}\n"
+        "mov %[ret], r0"
+        : [ret] "=r" (result)
+        : [v] "i" (SYS_fork)
+        : "memory"
+    );
+    return result;
+}

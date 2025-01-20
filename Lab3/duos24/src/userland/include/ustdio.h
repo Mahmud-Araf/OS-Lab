@@ -4,4 +4,5 @@
 #include <stdint.h>
 #include <stdarg.h>
 void uprintf(char *format,...);
+void uscanf(char *format, ...);  /* Read formatted input */
 #endif

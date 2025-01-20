@@ -35,18 +35,16 @@
 #include <kstdio.h>
 #include <kstring.h>
 #include <stdint.h>
-#include <usart.h>
-#include <gpio.h>
-#include <stm32_peps.h>
-#include <dev_table.h>
-#include <sys.h>
-#include <nvic.h>
-#include <test_interrupt.h>
+
+
 #include <unistd.h>
 #include <ustdio.h>
-
 #include <syscall.h>
-#include <syscall_def.h>
+#include <app.h>
+#include<nvic.h>
+
+
+
 
 #include <app.h>
 

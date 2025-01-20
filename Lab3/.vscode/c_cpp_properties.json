@@ -3,7 +3,12 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/duos24/src/kern/include/kern",
+                "${workspaceFolder}/duos24/src/kern/dev/include",
+                "${workspaceFolder}/duos24/src/kern/arch/stm32f446re/include/sys",
+                "${workspaceFolder}/duos24/src/kern/arch/include/cm4",
+                "${workspaceFolder}/duos24/src/kern/arch/stm32f446re/include/dev"
             ],
             "defines": [],
             "macFrameworkPath": [
