@@ -106,11 +106,6 @@ void syscall(uint32_t *svc_args)
 	}
 	case SYS_execv:
 	{
-		const char *path = (const char *)svc_args[0];
-		char *const *argv = (char *const *)svc_args[1];
-		int result = __sys_execv(path, argv);
-		// Only reaches here if execv failed
-		svc_args[0] = (uint32_t)result;
 		break;
 	}
 	default:;

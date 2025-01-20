@@ -32,11 +32,12 @@
 #include <syscall_def.h>
 /* Define you function details here */
 
-uint32_t uget_time(void) {
-    uint32_t time = 0;
-	__asm volatile("mov r0, %[x]": : [x] "r" (&time));
-	__asm volatile ("PUSH {r4-r11, ip, lr}");
-	__asm volatile("svc %0" : : "i" (SYS___time));
-	__asm volatile ("POP {r4-r11, ip, lr}");
+uint32_t uget_time(void)
+{
+	uint32_t time = 0;
+	__asm volatile("mov r0, %[x]" : : [x] "r"(&time));
+	__asm volatile("PUSH {r4-r11, ip, lr}");
+	__asm volatile("svc %0" : : "i"(SYS___time));
+	__asm volatile("POP {r4-r11, ip, lr}");
 	return time;
 }

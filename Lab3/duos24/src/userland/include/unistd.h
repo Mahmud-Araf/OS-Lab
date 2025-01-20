@@ -43,6 +43,5 @@ uint32_t ugetpid(void);
 void ustart_task(uint32_t psp);
 void *umalloc(uint32_t size);  /* Allocate memory from heap */
 int ufree(void *ptr);  /* Free allocated memory */
-int uexecv(const char *path, char *const argv[]); /* Execute a file */
 int ufork(void);  /* Create a new process */
 #endif

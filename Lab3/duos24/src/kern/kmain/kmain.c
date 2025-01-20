@@ -107,6 +107,7 @@ void SVC_Tester(void)
 TCB_TypeDef __task[MAX_TASKS], __sleep;
 
 uint32_t GLOBAL_COUNT = 0;
+
 void task_1(void)
 {
 	uint32_t value;
@@ -168,8 +169,6 @@ void kmain(void)
 	__NVIC_SetPriority(PendSV_IRQn, 0xFF);
 	__move_to_user();
 
-	// SVC_Tester();
-	// do_taskswitch();
 	umain();
 
 	kprintf("___________END MAIN___________\n");

@@ -52,6 +52,5 @@ int __sys_write(uint32_t fd, char *data, uint32_t size);
 int __sys_fork(TCB_TypeDef *parent_task);  /* Fork system call */
 int __sys_free(void *ptr);  /* Free allocated memory */
 void *__sys_malloc(uint32_t size);  /* Allocate memory from heap */
-int __sys_execv(const char *path, char *const argv[]); /* Execute a file */
 #endif /* KERN_UNISTD_H */
 

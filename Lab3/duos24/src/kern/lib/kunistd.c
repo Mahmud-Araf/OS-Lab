@@ -53,14 +53,12 @@ void __sys_start_task(uint32_t psp)
 
 int __sys_open(char *name, uint8_t t_access, uint32_t *op_addr)
 {
-    if (device_count >= MAX_DEVICES)
-        return -1;
-    kstrcpy((uint8_t*)device_list[device_count].name, (uint8_t*)name);
+    kstrcpy((uint8_t *)device_list[device_count].name, (uint8_t *)name);
+    device_list[device_count].t_ref++;
     device_list[device_count].t_access = t_access;
     device_list[device_count].op_addr = op_addr;
-    device_list[device_count].t_ref = 1;
     device_count++;
-    return 0;
+    return device_count - 1;  
 }
 
 void __sys_close(uint32_t *op_addr)
@@ -187,55 +185,3 @@ int __sys_fork(TCB_TypeDef *parent_task)
     // 7. Return child's PID to parent
     return child_tcb.task_id;
 }
-
-int __sys_execv(const char *path, char *const argv[]) {
-    // Get current task
-    extern TCB_TypeDef *current_task;
-    if (!current_task) {
-        kprintf("execv: No current task\n");
-        return -1;
-    }
-
-    // For now, we'll implement a basic version that loads from flash
-    // In a real implementation, we would:
-    // 1. Validate the executable path
-    // 2. Check file permissions
-    // 3. Load the executable from flash to RAM
-    // 4. Set up the new stack frame
-    // 5. Clean up old process resources
-    // 6. Transfer control to new program
-
-    // Get the program entry point from the path
-    // This is a simplified version - in reality we would parse the executable
-    void (*program_entry)(void) = (void (*)(void))path;
-    
-    if (!program_entry) {
-        kprintf("execv: Invalid program path\n");
-        return -1;
-    }
-
-    // Save arguments somewhere accessible to the new program
-    // In a real implementation, we would copy these to the new process's memory space
-    
-    // Clear current process memory except stack
-    // In a real implementation, we would properly clean up resources
-    
-    // Set up initial stack frame for new program
-    uint32_t *sp = current_task->psp;
-    
-    // Save program arguments
-    // In a real implementation, we would copy these to appropriate locations
-    
-    // Update task control block
-    current_task->psp = sp;
-    
-    // Debug output
-    kprintf("execv: Executing program at 0x%x\n", program_entry);
-    
-    // Transfer control to new program
-    program_entry();
-    
-    // Should never reach here on success
-    return -1;
-}
-

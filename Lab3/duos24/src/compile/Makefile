@@ -9,9 +9,12 @@ OBJECT = object
 USERLAND = ../userland
 USER_APP = $(USERLAND)/utils/app.c
 USER_OBJECT = $(OBJECT)/app.o
-GCC_PATH=/opt/homebrew/Cellar/arm-none-eabi-gcc/14.2.0
+
+
 
 INCLUDE=-I$(TOP)/arch/include -I$(TOP)/dev/include -I$(TOP)/arch/$(MCU)/include -I$(TOP)/include -I$(TOP)/include/kern -I$(TOP)/arch/$(MCU)/include -I$(TOP)/arch/$(MCU)/include/dev -I$(TOP)/arch/include/cm4 -I$(TOP)/arch/$(MCU)/include/sys -I$(USERLAND)/include -I$(TOP)/arch/$(MCU)/include/utilities -I$(TOP)/include/testprog
+
+GCC_PATH=/opt/homebrew/Cellar/arm-none-eabi-gcc/14.2.0
 
 # Include paths for the ARM GCC toolchain
 INCLUDE += -I$(GCC_PATH)/lib/gcc/arm-none-eabi/14.2.0/include \

@@ -30,8 +30,8 @@
 
 #include <ktimes.h>
 #include <cm4.h>
+
 void __sys_get_time(uint32_t *time)
 {
     *time = __getTime();
 }
-

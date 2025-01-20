@@ -71,26 +71,10 @@ void test_process_management() {
         uprintf("[FAIL] Fork failed with error code: %d\n", child_pid);
     }
     
-    // Test execv
-    uprintf("\n[INFO] Testing execv:\n");
-    char *argv[] = {"test_program", NULL};
-    int ret = uexecv((char*)&test_process_management, argv);
-    if (ret < 0) {
-        uprintf("[FAIL] Execv failed with error code: %d\n", ret);
-    } else {
-        uprintf("[OK] Execv test passed\n");
-    }
-}
-
-void test_basic_write() {
-    // Test direct writing first
-    uwrite(1, "Basic write test\n");
 }
 
 int umain() {
-    // Start with basic write test
-    test_basic_write();
-    
+
     uprintf("\n***** Starting DUOS User Function Test Suite *****\n");
     uprintf("================================================\n");
     
@@ -100,7 +84,7 @@ int umain() {
     // 2. Test Memory Management (malloc, free)
     test_memory_management();
     
-    // 3. Test Process Management (fork, exec, etc)
+    // 3. Test Process Management (fork)
     test_process_management();
     
     uprintf("\n================================================\n");

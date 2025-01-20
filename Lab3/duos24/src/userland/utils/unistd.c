@@ -32,33 +32,34 @@
 #include <syscall_def.h>
 #include <kstdio.h>
 
-void ufopen(char *name, uint8_t t_access, uint32_t *op_addr) {
-	__asm volatile (
+void ufopen(char *name, uint8_t t_access, uint32_t *op_addr)
+{
+	__asm volatile(
 		"mov r0, %[x]\n"
 		"mov r1, %[y]\n"
-		: 
-		: [x] "r" (name), [y] "r" (t_access)
-	);
+		:
+		: [x] "r"(name), [y] "r"(t_access));
 	__asm volatile(
 		"mov r2, %[x]\n"
 		:
-		: [x] "r" (op_addr)
-	);
+		: [x] "r"(op_addr));
 
-	__asm volatile ("PUSH {r4-r11, ip, lr}");
-	__asm volatile("svc %0" : : "i" (SYS_open));
-	__asm volatile ("POP {r4-r11, ip, lr}");
+	__asm volatile("PUSH {r4-r11, ip, lr}");
+	__asm volatile("svc %0" : : "i"(SYS_open));
+
+	__asm volatile("POP {r4-r11, ip, lr}");
 }
 
-void ufclose(uint32_t *op_addr) {
-	__asm volatile (
+void ufclose(uint32_t *op_addr)
+{
+	__asm volatile(
 		"mov r0, %[x]\n"
 		:
-		: [x] "r" (op_addr)
-	);
-	__asm volatile ("PUSH {r4-r11, ip, lr}");
-	__asm volatile("svc %0" : : "i" (SYS_close));
-	__asm volatile ("POP {r4-r11, ip, lr}");
+		: [x] "r"(op_addr));
+	__asm volatile("PUSH {r4-r11, ip, lr}");
+	__asm volatile("svc %0" : : "i"(SYS_close));
+
+	__asm volatile("POP {r4-r11, ip, lr}");
 }
 
 void ureboot(void) {
@@ -98,8 +99,10 @@ void uwrite(uint8_t fd, char *data) {
 	__asm volatile ("POP {r4-r11, ip, lr}");
 }
 
-void uyield(void) {
-	__asm volatile("svc %0" : : "i" (SYS_yield));
+
+void uyield(void)
+{
+	__asm volatile("svc %0" : : "i"(SYS_yield));
 }
 
 void utask_exit(void) {
@@ -176,27 +179,6 @@ int ufree(void *ptr) {
     return result;
 }
 
-int uexecv(const char *path, char *const argv[]) {
-    int result;
-    
-    // Move arguments to registers
-    __asm volatile(
-        "mov r0, %[path]\n"        // Path to executable
-        "mov r1, %[argv]\n"        // Arguments array
-        "push {r4-r11, ip, lr}\n"  // Save context
-        "svc %[syscall]\n"         // Make system call
-        "mov %[result], r0\n"      // Get result
-        "pop {r4-r11, ip, lr}\n"   // Restore context
-        : [result] "=r" (result)   // Output
-        : [path] "r" (path),       // Inputs
-          [argv] "r" (argv),
-          [syscall] "i" (SYS_execv)
-        : "r0", "r1", "memory"     // Clobbers
-    );
-    
-    // If we get here, execv failed (should not return on success)
-    return result;
-}
 
 int ufork(void) {
     int result;
