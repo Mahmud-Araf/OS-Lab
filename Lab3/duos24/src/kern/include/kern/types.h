@@ -27,37 +27,73 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
 #ifndef __TYPES_H
 #define __TYPES_H
-/*
-* Task, thread or process header
-*/
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdint.h>
+#undef NULL
+#define NULL 0
 
-/* Memory management structures */
-typedef struct mem_block {
-    void *addr;           // Start address of memory block
-    uint32_t size;        // Size of memory block
-    uint16_t pid;         // Process ID that owns this block
-    uint8_t is_free;      // 1 if block is free, 0 if allocated
-    struct mem_block *next; // Next block in list
-} mem_block_t;
 
-typedef struct {
-    mem_block_t *head;    // Head of memory block list
-    uint32_t total_size;  // Total memory managed
-    uint32_t free_size;   // Total free memory
-} mem_table_t;
+#define size_t uint64_t
 
-typedef struct dev_t {
-	char name[32]; // Device name or symbol
-	uint32_t t_ref; //Number of open count
-	uint8_t t_access; //open type O_RDONLY, O_WRDONLY, O_APPEND
-	uint32_t *op_addr; //Address of the datastructure operations
-} dev_table;
+#define SYS_GPIO_t    0x001
+#define SYS_USART_t   0x002
+#define SYS_SPI_t     0x003
+#define SYS_I2C_t     0x004
+#define SYS_CAN_t     0x005
+#define SYS_RCC_t     0x006
+#define SYS_RTC_t     0x007
+#define SYS_ADC_t     0x008
+#define SYS_DAC_t     0x009
 
-typedef struct task_tcb {
+typedef struct peripheral_type_t
+{
+    uint32_t p_type_t;
+    void *p_address_t;
+}Data_TypeDef;
+
+typedef enum 
+{
+  SYS_OK       = 0x00U,
+  SYS_ERROR    = 0x01U,
+  SYS_BUSY     = 0x02U,
+  SYS_TIMEOUT  = 0x03U,
+  SYS_FRAME_ERROR = 0x04U,
+  SYS_BUFFER_EMPTY = 0x05,
+  SYS_NO_MESSAGE=0x06
+} StatusTypeDef;
+
+typedef enum
+{
+  SYS_UNLOCKED = 0x00U,
+  SYS_LOCKED   = 0x01U
+} LockTypeDef;
+
+typedef enum 
+{
+  RESET = 0U, 
+  SET = !RESET
+} FlagStatus, ITStatus;
+
+typedef enum
+{
+  DISABLE = 0U,
+  ENABLE = !DISABLE
+} FunctionalState;
+
+#define IS_FUNCTIONAL_STATE(STATE) (((STATE) == DISABLE) || ((STATE) == ENABLE))
+
+typedef enum
+{
+  SUCCESS = 0U,
+  ERROR = !SUCCESS
+} ErrorStatus;
+
+
+typedef struct task_tcb{
 	uint32_t magic_number; //here it is 0xFECABAA0
 	uint16_t task_id; //a unsigned 16 bit integer starting from 1000 
 	uint32_t *psp; //task stack pointer or stackframe address
@@ -67,13 +103,66 @@ typedef struct task_tcb {
 	uint32_t digital_sinature; //current value is 0x00000001
 } TCB_TypeDef;
 
-typedef struct ready_queue {
-	int size;
-	int max;
-    int st;
-	int ed;
-	TCB_TypeDef *q[30];
-} ReadyQ_TypeDef;
+#if defined (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050) /* ARM Compiler V6 */
+  #ifndef __weak
+    #define __weak  __attribute__((weak))
+  #endif
+  #ifndef __packed
+    #define __packed  __attribute__((packed))
+  #endif
+#elif defined ( __GNUC__ ) && !defined (__CC_ARM) /* GNU Compiler */
+  #ifndef __weak
+    #define __weak   __attribute__((weak))
+  #endif /* __weak */
+  #ifndef __packed
+    #define __packed __attribute__((__packed__))
+  #endif /* __packed */
+#endif /* __GNUC__ */
 
+#if !defined(UNUSED)
+#define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+#endif /* UNUSED */
+
+#ifndef   __INLINE
+  #define __INLINE                               inline
+#endif
+#ifndef   __STATIC_INLINE
+  #define __STATIC_INLINE                        static inline
+#endif
+#ifndef   __STATIC_FORCEINLINE
+  #define __STATIC_FORCEINLINE                   __STATIC_INLINE
+#endif
+
+#ifndef __builtin_arm_rbit
+  #define  __builtin_arm_rbit                   __rbit
+#endif
+
+#ifndef __CLZ
+  #define __CLZ             __clz
+#endif
+
+
+
+__attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
+{
+  uint32_t result;
+  uint32_t s = (4U /*sizeof(v)*/ * 8U) - 1U; /* extra shift needed at end */
+
+  result = value;                      /* r will be reversed bits of v; first get LSB of v */
+  for (value >>= 1U; value != 0U; value >>= 1U)
+  {
+    result <<= 1U;
+    result |= value & 1U;
+    s--;
+  }
+  result <<= s;                        /* shift when v's highest bits are zero */
+  return result;
+}
+
+
+
+#ifdef __cplusplus
+}
+#endif
 #endif
 

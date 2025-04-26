@@ -30,23 +30,15 @@
 
 #ifndef __KMAIN_H
 #define __KMAIN_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-
-#define MAX_TASKS   20
+#define MAX_TASKS   5
 
 /* some stack memory calculations */
 #define SIZE_TASK_STACK          1024U
 #define SIZE_SCHED_STACK         1024U
-
-#define SRAM_START               0x20000000U
-#define SIZE_SRAM                ( 131072 ) // 128 * 1024
-#define SRAM_END                 ((SRAM_START) + (SIZE_SRAM) )
-
-#define KERNEL_STACK_START       SRAM_END // main stack
-#define KERNEL_STACK_SIZE        ( 4096 ) // 4KB
-#define KERNEL_STACK_END         ( (KERNEL_STACK_START) - (KERNEL_STACK_SIZE) ) 
-#define TASK_STACK_START         KERNEL_STACK_END
-#define TASK_STACK_SIZE          ( 1024 ) // 1KB
 
 #define TICK_HZ 1000U
 
@@ -63,5 +55,58 @@
 
 #define INTERRUPT_ENABLE()  do{__asm volatile ("MOV R0,#0x0"); asm volatile("MSR PRIMASK,R0"); } while(0)
 
+//by FAIAK
+#define RUNNING 0
+#define WAITING 1
+#define READY 2
+#define KILLED 3
+#define TERMINATED 4
+
+
+extern volatile uint16_t  TASK_ID;
+const static uint32_t MAGIC_NUMBER = 0xFECABAA0;
+const static uint32_t DIGITAL_SIGNATURE = 0x00000001; 
+
+#define MAX_QUEUE_SIZE_P  5
+
+
+extern volatile uint32_t QUEUE_SIZE_P ;
+extern volatile uint32_t CURR_TASK_P ;
+
+extern volatile TCB_TypeDef READY_QUEUE[MAX_QUEUE_SIZE_P];
+
+void create_tcb(TCB_TypeDef *tcb, void(*func_ptr)(void), uint32_t* stack_start);
+
+
+
+
+#define O_RDONLY 0
+#define O_WRONLY 1
+#define O_APPEND 2
+
+/* Constants for read/write/etc: special file handles */
+#define STDIN_FILENO  0      /* Standard input */
+#define STDOUT_FILENO 1      /* Standard output */
+#define STDERR_FILENO 2      /* Standard error */
+
+#define MAX_FILES 64
+
+typedef struct file_entry {
+    char name[32];     // File name
+    uint32_t *address; // Memory-mapped file location
+    uint32_t size;     // File size in bytes
+    uint8_t mode;      // File mode
+} file_entry_t;
+
+
+extern volatile file_entry_t file_list[MAX_FILES];
+extern volatile uint32_t file_count;
+
+int find_file(char *filename);
+
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* KMAIN_H */
 

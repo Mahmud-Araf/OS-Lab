@@ -31,10 +31,10 @@
 #ifndef __KSTDIO_H
 #define __KSTDIO_H
 #include <stdint.h>
-#include <stdarg.h>
+#include <types.h>
 
 void kprintf(char*,...); 
 void kscanf(char*,...);
-uint8_t strcomp(uint8_t*,uint8_t*);
+void putstr(const uint8_t*,size_t);
 #endif /* KSTDIO */
 

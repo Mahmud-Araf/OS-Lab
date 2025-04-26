@@ -1,5 +1,20 @@
 {
-    "files.associations": {
-        "sys.h": "c"
-    }
+  "files.associations": {
+    "syscall.h": "c",
+    "stm32_startup.h": "c",
+    "syscall_def.h": "c",
+    "kunistd.h": "c",
+    "sys_call.h": "c",
+    "cm4.h": "c",
+    "kmain.h": "c",
+    "stdint.h": "c",
+    "kstring.h": "c",
+    "cstdint": "c",
+    "times.h": "c",
+    "unistd.h": "c",
+    "unixtd.h": "c",
+    "stdarg.h": "c",
+    "sys_usart.h": "c",
+    "kstdio.h": "c"
+  }
 }

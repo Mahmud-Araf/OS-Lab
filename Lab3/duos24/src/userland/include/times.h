@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 
+ * Copyright (c) 2022
  * Computer Science and Engineering, University of Dhaka
  * Credit: CSE Batch 25 (starter) and Prof. Mosaddek Tushar
  *
@@ -27,11 +27,24 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
- 
+
 #ifndef __TIMES_H
 #define __TIMES_H
-#include <stdint.h>
 /* Define times function prototypes here */
-uint32_t uget_time(void);
 
+#include <stdint.h>
+#include <syscall_def.h>
+#include <types.h>
+
+uint32_t du_getSystickTime(void);
+
+void du_reboot(void);
+
+void *du_malloc(uint32_t size);
+
+void du_free(void *ptr);
+
+void fopen(char *name, uint8_t t_access, uint32_t *op_addr);
+
+void fclose(uint32_t *op_addr);
 #endif

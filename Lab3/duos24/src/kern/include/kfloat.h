@@ -29,11 +29,15 @@
  */
 #ifndef __KFLOAT_H
 #define __KFLOAT_H
-#include <stdint.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+#include <stdint.h>
+#define __DBL_INFINITY ((uint64_t)0x7FF<<52)
+#define __DBL_NAN   (((uint64_t)0x7FF<<52)|((uint64_t)0b1<<51))
 #define DOUBLE_FRAC_PRECISION 32
 #define LARGEST_FRAC (uint32_t)0x1DCD6500
-
 typedef union dpnum
 {
     uint64_t reg;
@@ -45,11 +49,34 @@ typedef union spnum
     uint32_t reg;
     float num;
 }__single_pnum;
+
 double __aeabi_f2d(float);
+
 float __aeabi_d2f(double);
+
 int32_t __aeabi_d2iz(double);
+
 int __aeabi_d2i(double);
+
 uint32_t get_decimal_part(double);
+
 double __aeabi_dadd(double, double);
+
 float __aeabi_fadd(float,float);
+
+double __aeabi_ui2d(uint32_t);
+
+uint32_t __aeabi_d2uiz(double);
+
+double __aeabi_dsub(double,double);
+
+double __aeabi_dmul(double,double);
+
+uint64_t __aeabi_d2ulz(double);
+
+double __aeabi_ddiv(double,double);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

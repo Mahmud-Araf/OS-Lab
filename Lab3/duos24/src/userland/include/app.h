@@ -1,4 +1,4 @@
-#include <ustdio.h>
 #include <unistd.h>
+#include <times.h>
 
-extern int umain();
+int umain();

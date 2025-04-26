@@ -1,5 +1,0 @@
-Run patch:
-1. Go to the folder of duos24
-2. Inside the root of the folder run this command to reflect the changes:
-sudo patch -p1 < path/to/changes.patch
-

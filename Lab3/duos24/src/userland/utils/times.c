@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 
+ * Copyright (c) 2022
  * Computer Science and Engineering, University of Dhaka
  * Credit: CSE Batch 25 (starter) and Prof. Mosaddek Tushar
  *
@@ -27,17 +27,99 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
- 
+
 #include <times.h>
-#include <syscall_def.h>
 /* Define you function details here */
 
-uint32_t uget_time(void)
+uint32_t du_getSystickTime(void)
 {
-	uint32_t time = 0;
-	__asm volatile("mov r0, %[x]" : : [x] "r"(&time));
-	__asm volatile("PUSH {r4-r11, ip, lr}");
-	__asm volatile("svc %0" : : "i"(SYS___time));
-	__asm volatile("POP {r4-r11, ip, lr}");
-	return time;
+    uint32_t time;
+
+    asm volatile(
+        "PUSH {r4-r11, ip, lr}\n"
+        "svc %0\n"
+        "POP {r4-r11, ip, lr}\n"
+        :
+        : "i"(SYS___time));
+
+    asm volatile(
+        "mov %0, r0\n"
+        : "=r"(time));
+
+    return time;
+}
+
+void du_reboot(void)
+{
+    asm volatile(
+        "PUSH {r4-r11, ip, lr}\n"
+        "svc %0\n"
+        "POP {r4-r11, ip, lr}\n"
+        :
+        : "i"(SYS_reboot));
+}
+
+void *du_malloc(uint32_t size)
+{
+    uint8_t sys_malloc = 69;
+    void *ptr;
+    __asm volatile(
+        "mov r2, %0\n"
+        "PUSH {r4-r11, ip, lr}\n"
+        "svc %1\n"
+        "POP {r4-r11, ip, lr}\n"
+        :
+        : "r"(size), "i"(SYS_malloc));
+
+    __asm volatile(
+        "mov %0, r2\n"
+        : "=r"(ptr));
+
+    return ptr;
+}
+
+void du_free(void *ptr)
+{
+
+    kprintf("memory to free --times : %x\n", ptr);
+    asm volatile(
+        "mov r2, %0\n"
+        "PUSH {r4-r11, ip, lr}\n"
+        "svc %1\n"
+        "POP {r4-r11, ip, lr}\n"
+        :
+        : "r"(ptr), "i"(SYS_free));
+
+    ptr = NULL;
+    kprintf("memory to free --times : %x\n", ptr);
+}
+
+void fopen(char *name, uint8_t t_access, uint32_t *op_addr)
+{
+    __asm volatile(
+        "mov r0, %[x]\n"
+        "mov r1, %[y]\n"
+        :
+        : [x] "r"(name), [y] "r"(t_access));
+    __asm volatile(
+        "mov r2, %[x]\n"
+        :
+        : [x] "r"(op_addr));
+
+    __asm volatile("PUSH {r4-r11, ip, lr}");
+    __asm volatile("svc %0" : : "i"(SYS_open));
+
+    __asm volatile("POP {r4-r11, ip, lr}");
+}
+
+void fclose(uint32_t *op_addr)
+{
+    __asm volatile(
+        "mov r0, %[x]\n"
+        :
+        : [x] "r"(op_addr));
+    __asm volatile("PUSH {r4-r11, ip, lr}");
+    __asm volatile("svc %0" : : "i"(SYS_close));
+
+    __asm volatile("POP {r4-r11, ip, lr}");
 }

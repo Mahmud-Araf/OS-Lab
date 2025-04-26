@@ -30,10 +30,6 @@
 
 #ifndef __KTIMES_H
 #define __KTIMES_H
-#include <types.h>
-
-void __sys_get_time(uint32_t *time);
-
 
 #endif
 

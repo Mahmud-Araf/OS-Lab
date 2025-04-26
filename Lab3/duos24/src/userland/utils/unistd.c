@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 
+ * Copyright (c) 2022
  * Computer Science and Engineering, University of Dhaka
  * Credit: CSE Batch 25 (starter) and Prof. Mosaddek Tushar
  *
@@ -27,169 +27,157 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
- 
+
 #include <unistd.h>
-#include <syscall_def.h>
-#include <kstdio.h>
+/* Write your highlevel I/O details */
 
-void ufopen(char *name, uint8_t t_access, uint32_t *op_addr)
+void du_scanf(char *format, ...)
 {
-	__asm volatile(
-		"mov r0, %[x]\n"
-		"mov r1, %[y]\n"
-		:
-		: [x] "r"(name), [y] "r"(t_access));
-	__asm volatile(
-		"mov r2, %[x]\n"
-		:
-		: [x] "r"(op_addr));
+    va_list args;
+    va_start(args, format);
 
-	__asm volatile("PUSH {r4-r11, ip, lr}");
-	__asm volatile("svc %0" : : "i"(SYS_open));
-
-	__asm volatile("POP {r4-r11, ip, lr}");
-}
-
-void ufclose(uint32_t *op_addr)
-{
-	__asm volatile(
-		"mov r0, %[x]\n"
-		:
-		: [x] "r"(op_addr));
-	__asm volatile("PUSH {r4-r11, ip, lr}");
-	__asm volatile("svc %0" : : "i"(SYS_close));
-
-	__asm volatile("POP {r4-r11, ip, lr}");
-}
-
-void ureboot(void) {
-	__asm volatile ("PUSH {r4-r11, ip, lr}");
-	__asm volatile("svc %0" : : "i" (SYS_reboot));
-	__asm volatile ("POP {r4-r11, ip, lr}");
-}
-
-void uread(uint8_t fd, char **data, uint32_t size) {
-	__asm volatile (
-		"mov r0, %[x]\n"
-		"mov r1, %[y]\n"
-		:
-		: [x] "r" (fd), [y] "r" (data)
-	);
-	__asm volatile (
-		"mov r2, %[x]\n"
-		:
-		: [x] "r" (size)
-	);
-	__asm volatile ("PUSH {r4-r11, ip, lr}");
-	__asm volatile("svc %0" : : "i" (SYS_read));
-	__asm volatile ("POP {r4-r11, ip, lr}");
-}
-
-void uwrite(uint8_t fd, char *data) {
-	__asm volatile (
-		"mov r0, %[x]\n"
-		"mov r1, %[y]\n"
-		:
-		: [x] "r" (fd), [y] "r" (data)
-	);
-    __asm volatile("stmdb r13!, {r5}");
-
-	__asm volatile ("PUSH {r4-r11, ip, lr}");
-	__asm volatile("svc %0" : : "i" (SYS_write));
-	__asm volatile ("POP {r4-r11, ip, lr}");
-}
-
-
-void uyield(void)
-{
-	__asm volatile("svc %0" : : "i"(SYS_yield));
-}
-
-void utask_exit(void) {
-    __asm volatile("PUSH {r5}");
-    __asm volatile ("PUSH {r4-r11, ip, lr}");
-	__asm volatile("svc %0" : : "i" (SYS__exit));
-	__asm volatile ("POP {r4-r11, ip, lr}");
-    uyield();
-}
-
-uint32_t ugetpid(void) {
-    unsigned int pid = 0;
-    __asm volatile("mov r5, %[v]": : [v] "r" (&pid));
-    __asm volatile("PUSH {r5}");
-
-    __asm volatile ("PUSH {r4-r11, ip, lr}");
-	__asm volatile("svc %0" : : "i" (SYS_getpid));
-	__asm volatile ("POP {r4-r11, ip, lr}");
-    return (uint16_t) pid;
-}
-
-void ustart_task(uint32_t psp) {
-	__asm volatile ("MOV R0, %0"
-		:
-		:"r" (psp)
-	);
-	__asm volatile ("PUSH {r4-r11, ip, lr}");
-	__asm volatile("svc %0" : : "i" (SYS_start));
-	__asm volatile ("POP {r4-r11, ip, lr}");
-}
-
-
-void *umalloc(uint32_t size) {
-    void *ptr;
-    
-    // Preserve all registers that might be clobbered
     __asm volatile(
-        "mov r0, %[size]\n"        // Move size to r0
-        "push {r4-r11, ip, lr}\n"  // Save context
-        "svc %[syscall]\n"         // Make system call
-        "mov %[result], r0\n"      // Get result immediately
-        "pop {r4-r11, ip, lr}\n"   // Restore context
-        : [result] "=r" (ptr)      // Output: ptr gets r0
-        : [size] "r" (size),       // Input: size parameter
-          [syscall] "i" (SYS_malloc)
-        : "r0", "memory"           // Clobbers: r0 and memory
-    );
-    
-    // Debug print the address we received
-    kprintf("umalloc: received address 0x%x\n", (unsigned int)ptr);
-    
-    return ptr;
-}
+        "mov r0, %0\n"
+        "mov r1, %1\n"
+        :
+        : "r"(format), "r"(&args));
 
-int ufree(void *ptr) {
-    int result;
-    
-    // Use the same pattern as umalloc for consistency
+    __asm volatile("PUSH {r4-r11}");
     __asm volatile(
-        "mov r0, %[ptr]\n"         // Move ptr to r0
-        "push {r4-r11, ip, lr}\n"  // Save context
-        "svc %[syscall]\n"         // Make system call
-        "mov %[result], r0\n"      // Get result immediately
-        "pop {r4-r11, ip, lr}\n"   // Restore context
-        : [result] "=r" (result)   // Output: result gets r0
-        : [ptr] "r" (ptr),         // Input: ptr parameter
-          [syscall] "i" (SYS_free)
-        : "r0", "memory"           // Clobbers: r0 and memory
-    );
-    
-    // Debug print the result
-    kprintf("ufree: received status %d\n", result);
-    
-    return result;
+        "svc %0\n"
+        "POP {r4-r11}\n"
+        :
+        : "i"(SYS_read));
+
+    va_end(args);
 }
 
+void du_printf(char *format, ...)
+{
+    uint8_t str[500];
+    int index = 0;
+    va_list(place_holders);
 
-int ufork(void) {
-    int result;
-    __asm volatile (
-        "PUSH {r4-r11, ip, lr}\n"
-        "svc %[v]\n"
-        "POP {r4-r11, ip, lr}\n"
-        "mov %[ret], r0"
-        : [ret] "=r" (result)
-        : [v] "i" (SYS_fork)
-        : "memory"
-    );
-    return result;
+    va_start(place_holders, format);
+
+    int i = 0;
+    while (format[i] != '\0')
+    {
+        if (format[i] == '%')
+        {
+            i++;
+            if (format[i] == 'd')
+            {
+                int num = va_arg(place_holders, int);
+                if (num < 0)
+                {
+                    str[index] = '-';
+                    index++;
+                    num = -num;
+                }
+                uint8_t *result = convert(num, 10);
+
+                for (result; *result != '\0'; result++)
+                {
+                    str[index] = *result;
+                    index++;
+                }
+            }
+            else if (format[i] == 'c')
+            {
+                uint8_t ch = va_arg(place_holders, int);
+
+                str[index] = ch;
+                index++;
+            }
+            else if (format[i] == 's')
+            {
+                uint8_t *s = va_arg(place_holders, uint8_t *);
+                for (s; *s != '\0'; s++)
+                {
+                    str[index] = *s;
+                    index++;
+                }
+            }
+            else if (format[i] == 'f')
+            {
+                double num = va_arg(place_holders, double);
+
+                // uint8_t* result = float_2_str(num);
+                uint8_t *result = float2str(num);
+                for (result; *result != '\0'; result++)
+                {
+                    str[index] = *result;
+                    index++;
+                }
+            }
+            else if (format[i] == 'x')
+            {
+                int num = va_arg(place_holders, int);
+                if (num < 0)
+                {
+                    str[index] = '-';
+                    index++;
+                    num = -num;
+                }
+
+                str[index] = '0';
+                index++;
+                str[index] = 'x';
+                index++;
+
+                uint8_t *result = convert(num, 16);
+                for (result; *result != '\0'; result++)
+                {
+                    str[index] = *result;
+                    index++;
+                }
+            }
+        }
+        else
+        {
+
+            str[index] = (uint8_t)format[i];
+            index++;
+        }
+        i++;
+    }
+
+    str[index] = '\0';
+
+    va_end(place_holders);
+
+    volatile uint8_t fd = 1;
+    volatile char *buffer = (uint8_t *)str;
+    volatile uint32_t size_x = index;
+
+    // kprintf("format: %s\n", format);
+
+    // kprintf("fd: %d\n", fd);
+    // kprintf("buffer: %s\n", (char *)buffer);
+    // kprintf("size: %d\n", size_x);
+
+    __asm volatile(
+        "mov r0, %0\n" : : "r"(fd));
+    __asm volatile(
+        "mov r1, %0\n" : : "r"(buffer));
+    __asm volatile(
+        "mov r2, %0\n" : : "r"(size_x));
+
+    __ISB();
+
+    // int x = 0;
+    // asm volatile("mov %0, r3\n"
+    //              : "=r"(x));
+    // kprintf("x: %d\n", x);
+
+    __DSB();
+    __ISB();
+
+    asm volatile("PUSH {r4-r11}");
+    asm volatile(
+        "svc %0\n"
+        "POP {r4-r11}\n"
+        :
+        : "i"(SYS_write));
 }

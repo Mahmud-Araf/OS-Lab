@@ -41,8 +41,6 @@
 #define SYS_waitpid      4
 #define SYS_getpid       5
 #define SYS_getppid      6
-#define SYS_free         122
-#define SYS_malloc       123
 
 //(virtual memory)
 #define SYS_sbrk         7
@@ -152,8 +150,11 @@
 //-- Other reboot scheduling etc. --
 #define SYS_sync         118
 #define SYS_reboot       119
-#define SYS_yield        120	
+#define SYS_yield        120
 #define SYS_start        121
+#define SYS_set_pending  122
 
+#define SYS_malloc      123
+#define SYS_free         124
 
 #endif /*End of SYSCALL_DEF_H */

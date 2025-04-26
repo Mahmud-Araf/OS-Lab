@@ -26,17 +26,20 @@ SECTIONS
 		. = ALIGN(4);
 		_edata = .;
 	}>SRAM AT> FLASH
-	.heap : 
-  	{
-    _sheap = .;
-    . = _sheap + 32K;
-    _eheap = .;
-  	}>SRAM
 	/* placed only on VMA that is SRAM */
 	.bss :
 	{
 		_sbss = .;
 		*(.bss)
 		_ebss = .; 
+	}>SRAM
+
+	.heap :
+	{	. = ALIGN(4);
+		_sheap = .;
+		. = . + 32K;
+		*(.heap)
+		. = ALIGN(4);
+		_eheap = .;
 	}>SRAM
 }

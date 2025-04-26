@@ -18,6 +18,7 @@ extern "C" {
 void assert_failed(uint8_t *file, uint32_t line);
 #else
 #define assert_param(expr) ((void)0U)
+//void assert_failed(uint8_t *file, uint32_t line);
 #endif /* USE_FULL_ASSERT */
 
 #ifdef __cplusplus

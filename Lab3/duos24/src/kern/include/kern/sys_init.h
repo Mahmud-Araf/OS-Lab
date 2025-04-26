@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 
+ * Copyright (c) 2022
  * Computer Science and Engineering, University of Dhaka
  * Credit: CSE Batch 25 (starter) and Prof. Mosaddek Tushar
  *
@@ -27,11 +27,48 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
- 
+
 #ifndef __SYS_INIT_H
 #define __SYS_INIT_H
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <stdint.h>
 
-void __sys_init(void); 
-#endif /* SYS_INIT */
+    /* by faiak */
 
+    extern uint32_t _sheap;
+    extern uint32_t _eheap;
+
+    typedef struct heap_chunk
+    {
+        int size;
+        int isUse;
+        struct heap_chunk *next;
+    } heap_chunk;
+
+    typedef struct heap_info
+    {
+        heap_chunk *start;
+        heap_chunk *curr;
+
+        heap_chunk *free_list;
+        uint32_t available;
+    } heap_info;
+
+    extern heap_info *heap;
+
+    void heap_init(void);
+
+/********** */
+#define SET_ACT_DEV(QUEUE, DEV) (QUEUE |= DEV)
+    void __sys_init(void);
+    void SoftReset(void);
+    uint32_t verify_connectivity(void);
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* SYS_INIT */

@@ -30,6 +30,14 @@
  
 #ifndef __KMATH_H
 #define __KMATH_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 uint32_t __pow(uint32_t,uint32_t);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

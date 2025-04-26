@@ -34,23 +34,21 @@
 #define STDIN_FILENO  0      /* Standard input */
 #define STDOUT_FILENO 1      /* Standard output */
 #define STDERR_FILENO 2      /* Standard error */
-#include <kstdio.h>
-#include <dev_table.h>
-#include <kstring.h>
-#include <cm4.h>
-#include <stm32_peps.h>
-#include <usart.h>
-#include <types.h>  /* For TCB_TypeDef */
 
-void __sys_close(uint32_t *);
-void __sys_reboot(void);
-void __sys_start_task(uint32_t);
-void __sys_getpid(unsigned int *val,uint16_t value);
-int __sys_open(char *name, uint8_t t_access, uint32_t *op_addr);
-int __sys_read(uint32_t fd, char **data, uint32_t size);
-int __sys_write(uint32_t fd, char *data, uint32_t size);
-int __sys_fork(TCB_TypeDef *parent_task);  /* Fork system call */
-int __sys_free(void *ptr);  /* Free allocated memory */
-void *__sys_malloc(uint32_t size);  /* Allocate memory from heap */
+#include <stdint.h>
+#include <types.h>
+#include <kmain.h>
+#include <cm4.h>
+#include <sys_init.h>
+
+void *heap_malloc(uint32_t size);
+void heap_free(void *ptr);
+
+void __sys_start_task(uint32_t psp);
+
+int __sys_fork(uint32_t* parents_psp);
+
+int __sys_execv(char *filename, char *argv[], char *envp[]);
+
 #endif /* KERN_UNISTD_H */
 
